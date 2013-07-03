@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	    <title>visualize audible signals :: graphesizer</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}" />
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+	</head>
+	<body>
+		<canvas class="graph"></canvas>
+	    <h1>functionally: {% if not (signal == None) %}{{ signal }} - <a href="{{ url_for('static', filename='waves/%s.ogg' % signal) }}" type="audio/ogg; codecs='vorbis'">ogg</a> {% else %} sin(x) {% endif %} </h1>
+		<input type="range" min="10" max="10000" step="10" class="x_zoom" value="100" onkeyup="setXZoom(this.value)" />
+		<input type="range" min="10" max="10000" step="10" class="y_zoom" value="100" onkeyup="setYZoom(this.value)" />
+		<form method="GET" action="/generate">
+			<input type="text" id="signal" name="signal" onkeyup="graph_function(this.value)" />
+			<input type="submit" value="generate" />
+		</form>
+		<script type="text/javascript">
+			canvas = document.getElementsByTagName('canvas')[0];
+			canvas.setAttribute('width', '1391.5px');
+			canvas.setAttribute('height', '500px');
+		</script>
+		<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+	 </body>
+ </html>
