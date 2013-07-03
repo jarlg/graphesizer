@@ -1,4 +1,6 @@
 *.pyc
+*.wav
+*.ogg
 *.swp
 venv/
 runserver.py
