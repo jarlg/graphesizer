@@ -43,11 +43,11 @@
 		<script type="text/javascript">
 		new Dragdealer('x-zoom-slider',
 		{
-			steps: 44100,
+			steps: 100000,
 			speed: 0,
 			snap: true,
 			animationCallback: function(x, y) {
-				setXZoom(44100 * x + 0.1);
+				setXZoom(100000 * Math.log(x + 0.000001) + 10);
 			}
 		});
 		</script>
