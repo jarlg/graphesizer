@@ -67,11 +67,18 @@ function graph_function(f) {
 
 	context.fillStyle = "#E01B5D";
 	context.strokeStyle = "#E01B5D";
-	for (var i = 0; i < canvas.width; i += 1) {
-		context.beginPath();
+	context.beginPath();
+	for (var i = 0; i < canvas.width; i += 0.5) {
 		var x = (i - x_origin) / x_zoom;
-		context.arc(i, (-1 * eval(mathjs(f)) * y_zoom) + y_origin, 1.5, 0, 2 * Math.PI, false);
-		context.fill();
-		context.closePath();
+		var y_coord = (-1 * eval(mathjs(f)) * y_zoom) + y_origin;
+
+		if (i == 0) {
+			context.moveTo(x, y_coord);
+		}
+
+		context.lineTo(i, y_coord);
+		context.moveTo(i, y_coord);
 	}
+	context.closePath();
+	context.stroke();
 }

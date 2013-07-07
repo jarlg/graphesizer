@@ -1,5 +1,14 @@
-#x-zoom-slider, #y-zoom-slider {
-	width: 90%;
-	height: 30px;
-	margin-bottom: 20px;
+.dragdealer {
+	width: 100%;
+	height: 15px;
+	margin-bottom: 10px;
+}
+
+.drag-bar {
+	height: 15px;
+	width: 50px;
+	line-height: 15px;
+	text-align: center;
+	background: #E01B5D;
+	color: white;
 }

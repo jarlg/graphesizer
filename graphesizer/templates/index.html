@@ -16,16 +16,15 @@
 		<input type="range" min="10" max="10000" step="10" class="y_zoom" value="100" onkeyup="setYZoom(this.value)" />
 		!-->
 		<div class="dragdealer" id="x-zoom-slider">
-			<div class="red-bar handle">x zoom</div>
+			<div class="drag-bar handle">x</div>
 		</div>
-
+		<div class="dragdealer" id="y-zoom-slider">
+			<div class="drag-bar handle">y</div>
+		</div>
 		<form method="GET" action="/generate">
 			<input type="text" id="signal" name="signal" onkeyup="graph_function(this.value)" />
 			<input type="submit" value="generate" />
 		</form>
-		<div class="dragdealer" id="y-zoom-slider">
-			<div class="red-bar handle">y zoom</div>
-		</div>
 		<script type="text/javascript">
 			canvas = document.getElementsByTagName('canvas')[0];
 			canvas.setAttribute('width', '1391.5px');
