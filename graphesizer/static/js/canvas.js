@@ -12,6 +12,7 @@ function graph_current_function() {
 	graph_function(f);
 }
 
+// everytime we change zoom, we must redraw graph to see effects!
 function setXZoom(val) {
 	x_zoom = val;
 	graph_current_function();
@@ -68,7 +69,7 @@ function graph_function(f) {
 	context.fillStyle = "#E01B5D";
 	context.strokeStyle = "#E01B5D";
 	context.beginPath();
-	for (var i = 0; i < canvas.width; i += 0.5) {
+	for (var i = 0; i < canvas.width; i += 1) {
 		var x = (i - x_origin) / x_zoom;
 		var y_coord = (-1 * eval(mathjs(f)) * y_zoom) + y_origin;
 
