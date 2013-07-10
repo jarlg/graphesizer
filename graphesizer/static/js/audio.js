@@ -12,4 +12,4 @@ function sample_audio(f) {
 		audio[i++] = eval(mathjs(f));
 	}
 	return audio;
-}
+};

@@ -12,12 +12,7 @@ def index(signal=None):
                            signal = signal,
                            form = form)
 
-@app.route("/generate")
+@app.route("/generate", methods=["POST"])
 def generate():
-    signal = SignalForm(request.args)
-    sound_file = SoundFile(signal.data["signal"])
-    sound_file.generate()
-   # if "ogg" in request.args:
-   #     if request.args["ogg"]:
-   #         sound_file.encode_ogg()
-    return redirect("/%s" % sound_file.name)
+    # TODO handle json, return ogg file
+    pass

@@ -1,4 +1,8 @@
 # takes an input mathematical function and samples, digitalizes, it
+# TODO rewrite the entire module to not rely on eval(), but rather
+# based on the functions being sampled client-side;
+# here we just render a wav file; encode to ogg
+# also TODO a system for saving files.. or maybe remove after a certain time
 import wave
 import subprocess
 import os

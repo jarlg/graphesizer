@@ -21,7 +21,8 @@
 		<div class="dragdealer" id="y-zoom-slider">
 			<div class="drag-bar handle">y</div>
 		</div>
-		<form method="GET" action="/generate">
+		<form method="POST" action="/generate" onsubmit="return post_json(this)">
+			<input type="hidden" name="audio" value="" />
 			<input type="text" id="signal" name="signal" onkeyup="graph_function(this.value)" />
 			<input type="submit" value="generate" />
 		</form>
@@ -54,5 +55,6 @@
 		<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='js/audio.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='js/post_json.js') }}"></script>
 	 </body>
  </html>
