@@ -1,7 +1,4 @@
 # takes an input mathematical function and samples, digitalizes, it
-# TODO rewrite the entire module to not rely on eval(), but rather
-# based on the functions being sampled client-side;
-# here we just render a wav file; encode to ogg
 # also TODO a system for saving files.. or maybe remove after a certain time
 import wave
 import subprocess
@@ -13,32 +10,28 @@ from struct import pack
 SAMPLERATE = 44100
 DURATION   = 2
 
+# currently signal (the mathematical function) is not used..
+# just the input audio (the client-side sample of the signal)
 class SoundFile():
-    def __init__(self, signal):
+    def __init__(self, signal="", audio=[]):
         self.signal = signal
         #self.name = md5(signal).digest()
         self.name = "wave"
+        self.audio = audio
         self.ogg = True
         self.path = os.path.join(os.getcwd(),\
                                  "graphesizer/static/waves/")
 
-    def generate(self):
-        wav = ""
+    def wav_from_audio(self):
+        A = 2 ** 14
 
-        i = 1.0 / SAMPLERATE
-        x = 0
-        f = 2 ** 14
-        while x < DURATION:
-            wav += pack('h', eval(self.signal) * f)
-            x += i
+        wav = ""
+        wav += (pack('h', a * A) for a in self.audio)
 
         w = wave.open(self.path + self.name + ".wav", 'w')
         w.setparams((1, 2, SAMPLERATE, 0, 'NONE', 'not compressed'))
         w.writeframes(wav)
         w.close()
-
-        if self.ogg:
-            self.encode_ogg()
 
     def encode_ogg(self):
         f = os.path.join(self.path, self.name + ".wav")
