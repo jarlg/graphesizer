@@ -26,7 +26,8 @@ class SoundFile():
         A = 2 ** 14
 
         wav = ""
-        wav += (pack('h', a * A) for a in self.audio)
+        for a in self.audio:
+            wav += pack('h', a * A)
 
         w = wave.open(self.path + self.name + ".wav", 'w')
         w.setparams((1, 2, SAMPLERATE, 0, 'NONE', 'not compressed'))

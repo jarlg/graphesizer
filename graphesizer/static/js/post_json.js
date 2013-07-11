@@ -3,6 +3,8 @@
 //
 
 function post_json(e) {
+	// TODO a 'processing' function / gif to run while this happens
+
 	// collect the form data while iterating over the 
 	var data = {};
 	for (var i = 0, ii = e.length; i < ii; ++i) {
@@ -24,6 +26,8 @@ function post_json(e) {
 	xhr.send(JSON.stringify(data));
 
 	xhr.onloadend = function () {
+		// TODO finish the 'processing' phase; initiate 'done' phase
+		// TODO update an element here to make playing sound possible
 		alert(xhr.responseText);
 	};
 
