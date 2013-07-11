@@ -25,15 +25,26 @@ class SoundFile():
     def wav_from_audio(self):
         A = 2 ** 14
 
+        # normalize audio to 1
+        greatest = 0
+        for a in self.audio:
+            greatest = a if abs(a) > greatest else greatest
+
+        for i, a in enumerate(self.audio):
+            self.audio[i] = a / greatest
+
+        # pack
         wav = ""
         for a in self.audio:
             wav += pack('h', a * A)
 
+        # write wav file
         w = wave.open(self.path + self.name + ".wav", 'w')
         w.setparams((1, 2, SAMPLERATE, 0, 'NONE', 'not compressed'))
         w.writeframes(wav)
         w.close()
 
+    # write ogg file
     def encode_ogg(self):
         f = os.path.join(self.path, self.name + ".wav")
         cmd = ["oggenc", "-q8", f]
