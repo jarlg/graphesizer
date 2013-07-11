@@ -22,9 +22,10 @@
 			<div class="drag-bar handle">y</div>
 		</div>
 		<form method="POST" action="/generate" onsubmit="return post_json(this)">
-			<input type="hidden" name="audio" value="" />
 			<input type="text" id="signal" name="signal" onkeyup="graph_function(this.value)" />
-			<input type="submit" value="generate" />
+			<div id="audio_box">
+				<input type="submit" value="generate" />
+			</div>
 		</form>
 		<script type="text/javascript">
 			canvas = document.getElementsByTagName('canvas')[0];

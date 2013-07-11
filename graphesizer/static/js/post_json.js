@@ -4,6 +4,8 @@
 
 function post_json(e) {
 	// TODO a 'processing' function / gif to run while this happens
+	var box = document.getElementById('audio_box');
+	box.innerHTML = "processing"
 
 	// collect the form data while iterating over the 
 	var data = {};
@@ -27,8 +29,9 @@ function post_json(e) {
 
 	xhr.onloadend = function () {
 		// TODO finish the 'processing' phase; initiate 'done' phase
+		box.innerHTML = "finished; play"
 		// TODO update an element here to make playing sound possible
-		alert(xhr.responseText);
+		box.innerHTML += "<audio controls src='" + xhr.responseText + "'> test </audio>"
 	};
 
 	// do stop form submitting data
