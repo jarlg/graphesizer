@@ -3,5 +3,4 @@
 *.ogg
 *.swp
 venv/
-runserver.py
 config.py
