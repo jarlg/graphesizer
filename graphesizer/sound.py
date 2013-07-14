@@ -4,7 +4,6 @@ import wave
 import subprocess
 import os
 from math import *
-from hashlib import md5
 from struct import pack
 
 SAMPLERATE = 44100
@@ -15,10 +14,13 @@ DURATION   = 2
 class SoundFile():
     def __init__(self, signal="", audio=[]):
         self.signal = signal
-        #self.name = md5(signal).digest()
-        self.name = "wave"
+        self.name = ""
+        # just a silly way to make names..
+        for i in xrange(20):
+            self.name += str(audio[i])[-1]
         self.audio = audio
         self.ogg = True
+        # not quite sure this path is correct... works in testing
         self.path = os.path.join(os.getcwd(),\
                                  "graphesizer/static/waves/")
 
@@ -28,7 +30,7 @@ class SoundFile():
         # normalize audio to 1
         greatest = 0
         for a in self.audio:
-            greatest = a if abs(a) > greatest else greatest
+            greatest = abs(a) if abs(a) > greatest else greatest
 
         for i, a in enumerate(self.audio):
             self.audio[i] = a / greatest
