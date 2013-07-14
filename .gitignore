@@ -2,5 +2,5 @@
 *.wav
 *.ogg
 *.swp
-venv/
 config.py
+venv/
