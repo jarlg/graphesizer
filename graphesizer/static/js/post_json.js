@@ -29,9 +29,9 @@ function post_json(e) {
 
 	xhr.onloadend = function () {
 		// TODO finish the 'processing' phase; initiate 'done' phase
-		box.innerHTML = "finished; play";
+		// TODO handle corrupt input response
 		// TODO update an element here to make playing sound possible
-		box.innerHTML += "<audio controls src='" + xhr.responseText + "'> test </audio>";
+		box.innerHTML = "<audio controls src='" + xhr.responseText + "'> test </audio>";
 	};
 
 	// do stop form submitting data

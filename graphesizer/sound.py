@@ -16,8 +16,8 @@ class SoundFile():
         self.name = ""
         self.corrupt = False
         # just a silly way to make names.. should be pretty unique
-        for i in xrange(30):
-            if type(audio[i]) == type(1.0):
+        for i in xrange(1, 25):
+            if (type(audio[i]) == type(1.0)) or (audio[i] == 0):
                 self.name += str(audio[i])[-1]
             else:
                 self.corrupt = True
@@ -29,9 +29,9 @@ class SoundFile():
 
         # we only create the file if it doesn't exist
         if os.path.isfile(os.path.join(self.path, self.name + ".ogg")):
-            self.exists = False
-        else:
             self.exists = True
+        else:
+            self.exists = False
 
     def wav_from_audio(self):
         if (not self.exists) and (not self.corrupt):
@@ -61,7 +61,7 @@ class SoundFile():
 
     # write ogg file
     def encode_ogg(self):
-        if (not self.exists) and (not self.corrtupt):
+        if (not self.exists) and (not self.corrupt):
             f = os.path.join(self.path, self.name + ".wav")
             cmd = ["oggenc", "-q7", f]
             subprocess.call(cmd)

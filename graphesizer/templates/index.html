@@ -18,12 +18,14 @@
 		<input type="range" min="10" max="240" step="2" class="y_zoom" value="100" onchange="setYZoom(this.value);" />
 		
 		<div id="inputs">
-			<form method="GET" action="/generate">
+			<form method="POST" action="/generate" onsubmit="return post_json(this)">
 				<p>
 				<span class="adjust"><i>f</i>(<i>x</i>):
 					<input type="text" id="signal" name="signal" value="{{ signal }}" onkeyup="graph_function(this.value)" /></span>
 				</p>
-				<input type="submit" class="button" value="Generate" />
+				<div id="audio_box">
+					<input type="submit" class="button" value="Generate" />
+				</div>
 			</form>
 		</div>
 		
