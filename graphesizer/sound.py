@@ -7,7 +7,6 @@ from math import *
 from struct import pack
 
 SAMPLERATE = 44100
-DURATION   = 2
 
 # currently signal (the mathematical function) is not used..
 # just the input audio (the client-side sample of the signal)
@@ -15,39 +14,54 @@ class SoundFile():
     def __init__(self, signal="", audio=[]):
         self.signal = signal
         self.name = ""
-        # just a silly way to make names..
-        for i in xrange(20):
-            self.name += str(audio[i])[-1]
+        self.corrupt = False
+        # just a silly way to make names.. should be pretty unique
+        for i in xrange(30):
+            if type(audio[i]) == type(1.0):
+                self.name += str(audio[i])[-1]
+            else:
+                self.corrupt = True
+                break
+
         self.audio = audio
-        self.ogg = True
-        # not quite sure this path is correct... works in testing
         self.path = os.path.join(os.getcwd(),\
                                  "graphesizer/static/waves/")
 
+        # we only create the file if it doesn't exist
+        if os.path.isfile(os.path.join(self.path, self.name + ".ogg")):
+            self.exists = False
+        else:
+            self.exists = True
+
     def wav_from_audio(self):
-        A = 2 ** 14
+        if (not self.exists) and (not self.corrupt):
+            A = 2 ** 14
 
-        # normalize audio to 1
-        greatest = 0
-        for a in self.audio:
-            greatest = abs(a) if abs(a) > greatest else greatest
+            # normalize audio to 1
+            greatest = 0
+            for a in self.audio:
+                greatest = abs(a) if abs(a) > greatest else greatest
 
-        for i, a in enumerate(self.audio):
-            self.audio[i] = a / greatest
+            for i, a in enumerate(self.audio):
+                self.audio[i] = a / greatest
 
-        # pack
-        wav = ""
-        for a in self.audio:
-            wav += pack('h', a * A)
+            # pack
+            wav = ""
+            for a in self.audio:
+                wav += pack('h', a * A)
 
-        # write wav file
-        w = wave.open(self.path + self.name + ".wav", 'w')
-        w.setparams((1, 2, SAMPLERATE, 0, 'NONE', 'not compressed'))
-        w.writeframes(wav)
-        w.close()
+            # write wav file
+            w = wave.open(self.path + self.name + ".wav", 'w')
+            w.setparams((1, 2, SAMPLERATE, 0, 'NONE', 'not compressed'))
+            w.writeframes(wav)
+            w.close()
+
+        else:
+            print "file %s exists" % self.name
 
     # write ogg file
     def encode_ogg(self):
-        f = os.path.join(self.path, self.name + ".wav")
-        cmd = ["oggenc", "-q8", f]
-        subprocess.call(cmd)
+        if (not self.exists) and (not self.corrtupt):
+            f = os.path.join(self.path, self.name + ".wav")
+            cmd = ["oggenc", "-q7", f]
+            subprocess.call(cmd)

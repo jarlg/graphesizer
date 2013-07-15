@@ -18,4 +18,7 @@ def generate():
     w = SoundFile(audio=data['audio'])
     w.wav_from_audio()
     w.encode_ogg()
-    return url_for('static', filename='waves/' + w.name + '.ogg')
+    if w.corrupt:
+        return "the input was corrupt"
+    else:
+        return url_for('static', filename='waves/' + w.name + '.ogg')
