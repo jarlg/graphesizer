@@ -21,7 +21,7 @@
 			<form method="GET" action="/generate">
 				<p>
 				<span class="adjust"><i>f</i>(<i>x</i>):
-					<input type="text" id="signal" name="signal" value="cos(10x)" onkeyup="graph_function(this.value)" /></span>
+					<input type="text" id="signal" name="signal" value="{{ signal }}" onkeyup="graph_function(this.value)" /></span>
 				</p>
 				<input type="submit" class="button" value="Generate" />
 			</form>
@@ -33,8 +33,8 @@
 		canvas.setAttribute('height', '500px');
 		
 		def = function() {
-			x = "Math.cos(10x)",
-			  slider = document.getElementById('slider');
+			x = "{{ signal }}",
+			slider = document.getElementById('slider');
 			slider.setAttribute('value', (width - 20) / 2);
 			slider.setAttribute('max', width + 20);
 			slider.setAttribute('onchange', "setXZoom(this.value * 2); time.value=(((canvas.width - 20) / 2) / this.value).toFixed(3); zoom.value=this.value/2;");
