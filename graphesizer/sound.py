@@ -65,3 +65,9 @@ class SoundFile():
             f = os.path.join(self.path, self.name + ".wav")
             cmd = ["oggenc", "-q7", f]
             subprocess.call(cmd)
+            self.delete_wav()
+
+    def delete_wav(self):
+        f = os.path.join(self.path, self.name + ".wav")
+        cmd = ["rm", f]
+        subprocess.call(cmd)
