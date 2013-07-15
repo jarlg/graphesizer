@@ -1,58 +1,47 @@
 <!DOCTYPE html>
 <html>
 	<head>
-	    <title>visualize audible signals :: graphesizer</title>
+		<title>visualize audible signals :: graphesizer</title>
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}" />
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/dragdealer.css') }}" />
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
-
-		<script src="{{ url_for('static', filename='js/dragdealer.js') }}"></script>
 	</head>
-	<body>
+	<body onload="def();">
+		<script>
+			var width = window.innerWidth;
+		</script>
 		<canvas class="graph"></canvas>
-	    <h1>functionally: {% if not (signal == None) %}{{ signal }} - <a href="{{ url_for('static', filename='waves/%s.ogg' % signal) }}" type="audio/ogg; codecs='vorbis'">ogg</a> {% else %} sin(x) {% endif %} </h1>
-		<!--
-		<input type="range" min="10" max="10000" step="10" class="x_zoom" value="100" onkeyup="setXZoom(this.value)" />
-		<input type="range" min="10" max="10000" step="10" class="y_zoom" value="100" onkeyup="setYZoom(this.value)" />
-		!-->
-		<div class="dragdealer" id="x-zoom-slider">
-			<div class="drag-bar handle">x</div>
+		<span id="x"><input type="range" id="slider" min="20" step="1" class="x_zoom" /></span>
+		
+		Debug monitor:<br>
+		you see <output id="time">1.000</output> second(s) of sound<br>
+		x-zoom value: <output id="zoom">...</output><br>
+		<input type="range" min="10" max="240" step="2" class="y_zoom" value="100" onchange="setYZoom(this.value);" />
+		
+		<div id="inputs">
+			<form method="GET" action="/generate">
+				<p>
+				<span class="adjust"><i>f</i>(<i>x</i>):
+					<input type="text" id="signal" name="signal" value="cos(10x)" onkeyup="graph_function(this.value)" /></span>
+				</p>
+				<input type="submit" class="button" value="Generate" />
+			</form>
 		</div>
-		<div class="dragdealer" id="y-zoom-slider">
-			<div class="drag-bar handle">y</div>
-		</div>
-		<form method="POST" action="/generate" onsubmit="return post_json(this)">
-			<input type="text" id="signal" name="signal" onkeyup="graph_function(this.value)" />
-			<div id="audio_box">
-				<input type="submit" value="generate" />
-			</div>
-		</form>
+		
 		<script type="text/javascript">
-			canvas = document.getElementsByTagName('canvas')[0];
-			canvas.setAttribute('width', '1391.5px');
-			canvas.setAttribute('height', '500px');
+		canvas = document.getElementsByTagName('canvas')[0];
+		canvas.setAttribute('width', width + 'px');
+		canvas.setAttribute('height', '500px');
+		
+		def = function() {
+			x = "Math.cos(10x)",
+			  slider = document.getElementById('slider');
+			slider.setAttribute('value', (width - 20) / 2);
+			slider.setAttribute('max', width + 20);
+			slider.setAttribute('onchange', "setXZoom(this.value * 2); time.value=(((canvas.width - 20) / 2) / this.value).toFixed(3); zoom.value=this.value/2;");
+			graph_function(x);
+		};
 		</script>
-		<script type="text/javascript">
-		new Dragdealer('y-zoom-slider',
-		{
-			steps: 100,
-			speed: 0,
-			animationCallback: function(x, y) {
-				setYZoom(300 * x + 10);
-			}
-		});
-		</script>
-		<script type="text/javascript">
-		new Dragdealer('x-zoom-slider',
-		{
-			steps: 100000,
-			speed: 0,
-			snap: true,
-			animationCallback: function(x, y) {
-				setXZoom(100000 * Math.log(x + 0.000001) + 10);
-			}
-		});
-		</script>
+		
 		<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='js/audio.js') }}"></script>

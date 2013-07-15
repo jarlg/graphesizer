@@ -5,7 +5,7 @@
 
 audio = [];
 RATE = 44100.0;
-DURATION = 1;
+DURATION = 2;
 
 function sample_audio(f) {
 	for (var x = 0, i = 0; x < DURATION; x += 1 / RATE) {
