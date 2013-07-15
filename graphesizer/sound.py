@@ -49,6 +49,12 @@ class SoundFile():
             wav = ""
             for a in self.audio:
                 wav += pack('h', a * A)
+            # hey let's do it twice for double the sound length
+            for a in self.audio:
+                wav += pack('h', a * A)
+            # why not 3 times
+            for a in self.audio:
+                wav += pack('h', a * A)
 
             # write wav file
             w = wave.open(self.path + self.name + ".wav", 'w')
