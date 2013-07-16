@@ -17,7 +17,11 @@ def generate():
     if request.method == "GET":
         return redirect(url_for('index'))
 
-    data = json.loads(request.data)
+    try:
+        data = json.loads(request.data)
+    except ValueError:
+        return redirect(url_for('index'))
+
     w = SoundFile(audio=data['audio'])
     w.wav_from_audio()
     w.encode_ogg()
