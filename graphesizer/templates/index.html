@@ -10,7 +10,7 @@
 			var width = window.innerWidth;
 		</script>
 		<canvas class="graph"></canvas>
-		<span id="x"><input type="range" id="slider" min="20" step="1" class="x_zoom" /></span>
+		<span id="x"><input type="range" id="slider" min="1" step="1" class="x_zoom" /></span>
 		
 		Debug monitor:<br>
 		you see <output id="time">1.000</output> second(s) of sound<br>
@@ -30,16 +30,21 @@
 		</div>
 		
 		<script type="text/javascript">
-		canvas = document.getElementsByTagName('canvas')[0];
+		var canvas = document.getElementsByTagName('canvas')[0];
 		canvas.setAttribute('width', width + 'px');
 		canvas.setAttribute('height', '500px');
+
+		// hey this algorithm works pretty well..
+		function calcZoom(v) {
+			return width / Math.log(v / width);
+		};
 		
 		def = function() {
 			x = "{{ signal }}",
 			slider = document.getElementById('slider');
-			slider.setAttribute('value', (width - 20) / 2);
-			slider.setAttribute('max', width + 20);
-			slider.setAttribute('onchange', "setXZoom(this.value * 2); time.value=(((canvas.width - 20) / 2) / this.value).toFixed(3); zoom.value=this.value/2;");
+			slider.setAttribute('value', (width - 1) / 2);
+			slider.setAttribute('max', width + 1);
+			slider.setAttribute('onchange', "setXZoom(calcZoom(this.value)); time.value=(((canvas.width - 20) / 2) / this.value).toFixed(3); zoom.value=this.value/2;");
 			graph_function(x);
 		};
 		</script>
