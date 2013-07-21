@@ -6,7 +6,7 @@ x_origin = 0;
 //x_origin = 0;
 //zoom means n pixels corresponding to 1 x on graph
 x_zoom = defZoom;
-y_zoom = 100;
+y_zoom = 200; // now we use zoom_fit to find a fitting zoom
 
 function graph_current_function() {
  	f = document.getElementById('signal').value;
@@ -58,9 +58,23 @@ function draw_axis() {
  	context.stroke();
 }
 
+function y_zoom_fit(f) {
+	var highest = 0;
+	for (var i = 0; i < canvas.width; i += 0.5) {
+ 		var x = (i - x_origin) / x_zoom;
+		var y = abs(eval(mathjs(f)));
+		if (y > highest) {
+			highest = y; 
+		}
+	}
+	return (y_zoom / highest); // let's normalize to y_zoom
+}
+
 function graph_function(f) {
  	var canvas = document.getElementsByTagName("canvas")[0];
  	var context = canvas.getContext("2d");
+
+	var y_factor = y_zoom_fit(f);
 
  	canvas.width = canvas.width;
  	// redraw of axis every time is heavy... crash!
@@ -69,9 +83,10 @@ function graph_function(f) {
  	context.fillStyle = "#E01B5D";
  	context.strokeStyle = "#E01B5D";
  	context.beginPath();
+
  	for (var i = 0; i < canvas.width; i += 0.5) {
  		var x = (i - x_origin) / x_zoom;
- 		var y_coord = (-1 * eval(mathjs(f)) * y_zoom) + y_origin;
+ 		var y_coord = (-1 * eval(mathjs(f)) * y_factor) + y_origin;
 
  		if (i == 0) {
  			context.moveTo(x, y_coord);
