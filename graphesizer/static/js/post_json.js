@@ -12,7 +12,12 @@ function post_json(e) {
 	for (var i = 0, ii = e.length; i < ii; ++i) {
 	    var input = e[i];
 	    if (input.name) {
-	        data[input.name] = input.value;
+			if (input.name == 'hertz') {
+				data['signal'] = "sin(" + input.value + " * 2 * pi * x)";
+			}
+			else {
+	        	data[input.name] = input.value;
+			}
 	    }
 	}
 

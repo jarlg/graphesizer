@@ -19,14 +19,15 @@
 		
 		<div id="inputs">
 			<form method="POST" action="/generate" onsubmit="return post_json(this)">
-				<p>
-				<span class="adjust"><i>f</i>(<i>x</i>):
-					<input type="text" id="signal" name="signal" value="{{ signal }}" onkeyup="graph_function(this.value)" /></span>
+				<p id="signal_view">
+				<span class="adjust"><i>f</i>(<i>x</i>): <input type="text" id="signal" name="signal" value="{{ signal }}" onkeyup="graph_function(this.value)" /></span>
 				</p>
 				<div id="audio_box">
 					<input type="submit" class="button" value="Generate" />
 				</div>
 			</form>
+			<a onclick="set_simple_view();">simple</a>
+			<a onclick="set_advanced_view();">advanced</a>
 		</div>
 		
 		<script type="text/javascript">
@@ -34,7 +35,7 @@
 		canvas.setAttribute('width', width + 'px');
 		canvas.setAttribute('height', '500px');
 
-		// hey this algorithm works pretty well..
+		// hey this algorithm works pretty well for all audible signals..
 		function calcZoom(v) {
 			return Math.pow(v, 2) * 4;
 		};
@@ -53,5 +54,6 @@
 		<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='js/audio.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='js/post_json.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='js/views.js') }}"></script>
 	 </body>
  </html>
