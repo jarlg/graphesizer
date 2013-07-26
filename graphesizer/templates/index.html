@@ -10,7 +10,7 @@
 			var width = window.innerWidth;
 		</script>
 		<canvas class="graph"></canvas>
-		<span id="x"><input type="range" id="slider" min="1" step="1" class="x_zoom" /></span>
+		<span id="x"><input type="range" id="slider" min="20" step="1" class="x_zoom" /></span>
 		
 		Debug monitor:<br>
 		you see <output id="time">1.000</output> second(s) of sound<br>
@@ -36,7 +36,7 @@
 
 		// hey this algorithm works pretty well..
 		function calcZoom(v) {
-			return width / Math.log(v / width);
+			return Math.pow(v, 2) * 4;
 		};
 		
 		def = function() {
