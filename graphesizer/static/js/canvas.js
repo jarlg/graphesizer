@@ -9,7 +9,12 @@ x_zoom = defZoom;
 y_zoom = 200; // now we use zoom_fit to find a fitting zoom
 
 function graph_current_function() {
- 	f = document.getElementById('signal').value;
+	if (view == "advanced") {
+ 		f = document.getElementById('signal').value;
+	}
+	else {
+		f = document.getElementById('hertz').value;
+	}
  	graph_function(f);
 }
 
@@ -71,6 +76,11 @@ function y_zoom_fit(f) {
 }
 
 function graph_function(f) {
+
+	if (view == 'simple') {
+		f = "sin(" + f + " * 2 * pi * x)";
+	}
+
  	var canvas = document.getElementsByTagName("canvas")[0];
  	var context = canvas.getContext("2d");
 
