@@ -7,6 +7,7 @@ from math import *
 from struct import pack
 
 SAMPLERATE = 44100
+DURATION = 5
 
 # currently signal (the mathematical function) is not used..
 # just the input audio (the client-side sample of the signal)
@@ -47,14 +48,9 @@ class SoundFile():
 
             # pack
             wav = ""
-            for a in self.audio:
-                wav += pack('h', a * A)
-            # hey let's do it twice for double the sound length
-            for a in self.audio:
-                wav += pack('h', a * A)
-            # why not 3 times
-            for a in self.audio:
-                wav += pack('h', a * A)
+            l = len(self.audio)
+            for i in xrange(SAMPLERATE * DURATION):
+                wav += pack('h', A * self.audio[i%l])
 
             # write wav file
             w = wave.open(self.path + self.name + ".wav", 'w')
