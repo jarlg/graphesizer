@@ -1,5 +1,6 @@
 # takes an input mathematical function and samples, digitalizes, it
-# also TODO a system for saving files.. or maybe remove after a certain time
+# TODO make server wait to serve file until oggenc is done.. currently serves
+# half-done files
 import wave
 import subprocess
 import os

@@ -3,4 +3,4 @@
 import graphesizer
 
 if __name__=="__main__":
-    graphesizer.run()
+    graphesizer.run_with_debug()
