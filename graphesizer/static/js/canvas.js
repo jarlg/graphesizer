@@ -1,12 +1,12 @@
 // VARS
-defZoom = (window.innerWidth - 20);
+var defZoom = (window.innerWidth - 20);
 // origins for axis
-y_origin = (canvas.height / 2) + 0.5;
-x_origin = 0;
+var y_origin = (canvas.height / 2) + 0.5;
+var x_origin = 0;
 //x_origin = 0;
 //zoom means n pixels corresponding to 1 x on graph
-x_zoom = defZoom;
-y_zoom = 200; // now we use zoom_fit to find a fitting zoom
+var x_zoom = defZoom;
+var y_zoom = 200; // now we use zoom_fit to find a fitting zoom
 
 function graph_current_function() {
 	if (view == "advanced") {

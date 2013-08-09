@@ -3,13 +3,38 @@
 // how can we sanitize the input for eval()?
 
 
-audio = [];
-RATE = 44100.0;
-DURATION = 1;
+function sample_audio(f, hz) {
+	var audio = [];
+	var RATE = 44100.0;
 
-function sample_audio(f) {
-	for (var x = 0, i = 0; x < DURATION; x += 1 / RATE) {
-		audio[i++] = eval(mathjs(f));
+	if (typeof hz !== 'undefined') {
+		var threshold = 0.1;
+		var base_samples = RATE / hz; 
+
+		var diff = base_samples - Math.floor(base_samples);
+		var base_diff = diff;
+		var f = 1;
+		while (true) {
+			if (diff < threshold) {
+				var SAMPLES = Math.floor(base_samples * f);
+				break;
+			}
+			else if (diff > (1 - threshold)) {
+				var SAMPLES = Math.round(base_samples * f);
+				break;
+			}
+
+			diff = base_diff * f - Math.floor(base_diff * f);
+		}
 	}
+	else {
+		var SAMPLES = RATE;
+	}
+
+	for (var i = 0; i < SAMPLES; i++) {
+		var x = i / RATE;
+		audio[i] = eval(mathjs(f));
+	}
+
 	return audio;
 };

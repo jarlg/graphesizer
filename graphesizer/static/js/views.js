@@ -6,7 +6,7 @@ var view = "advanced";
 function set_simple_view() {
 	view = "simple";
 	ds = document.getElementById('signal').value;
-	var simple_html = '<span class="adjust"><input type="text" id="hertz" name="hertz" value=368 onkeyup="graph_function(hertz=this.value)" />Hz</span>'
+	var simple_html = '<span class="adjust"><input type="text" id="hertz" name="hertz" value=368 onkeyup="graph_function(this.value, this.value)" />Hz</span>'
 	document.getElementById('signal_view').innerHTML = simple_html;
 }
 
