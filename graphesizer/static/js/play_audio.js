@@ -2,35 +2,41 @@ function writeAudioControlHTML(label, id) {
 	var container = document.getElementById('sounds');
 	container.innerHTML += "<p>" + label +
  	   "  <span id='" + id + "-container'></span></p>";
-	writePlayButton(id);
+	writeButton(id);
 }
 
-function writePauseButton(id) {
-	var e = document.getElementById(id);
+function writeButton(id) {
 	var container = document.getElementById(id + "-container");
-	container.innerHTML = "<i class='icon-stop' id='" + id + "'></i>";
+	container.innerHTML = "<i name='player' id='" + id + "'></i>";
 
-	var btn = document.getElementById(id);
-	btn.onclick = function() {
-		writePlayButton(e.id);
-		var gain = audioSources[e.id][1];
-		gain.gain.value = 0;
-	};
+	var icon = document.getElementById(id);
+	icon.setAttribute('class', 'icon-play');
+	icon.playing = false;
+	icon.source = audioSources[id][0];
+	icon.gain = audioSources[id][1];
+	icon.gain.gain.value = 0;
+
+	// a bit hacky; everytime we add, we erase the onclick
+	// of the previous elements.. so we reapply them
+	var players = document.getElementsByName('player');
+	for (var i = 0; i < players.length; i++)  {
+		players[i].onclick = function() {
+			this.source = audioSources[this.id][0];
+			this.gain = audioSources[this.id][1];
+			if (this.playing) {
+				this.gain.gain.value = 0;
+				this.setAttribute('class', 'icon-play');
+				this.playing = false;
+			}
+			else {
+				this.gain.gain.value = 1;
+				this.setAttribute('class', 'icon-stop');
+				this.playing = true;
+			}
+		};
+	}
+	audioSources[id][0].start(0);
 }
-
-function writePlayButton(id) {
-	var e = document.getElementById(id);
-	var container = document.getElementById(id + "-container");
-	container.innerHTML = "<i class='icon-play' id='" + id + "'></i>";
-
-	var btn = document.getElementById(id);
-	btn.onclick = function() {
-		writePauseButton(e.id);
-		var gain = audioSources[e.id][1];
-		gain.gain.value = 1;
-	};
-}
-
 
 function createAudioElement() {
 
@@ -42,7 +48,6 @@ function createAudioElement() {
 
 	var val = getInputValue();
 	var id = audioSources.length;
-	writeAudioControlHTML(val, id);
 
 	var samples, buffer;
 
@@ -60,15 +65,10 @@ function createAudioElement() {
 		src.connect(gain);
 		gain.connect(audioContext.destination);
 		audioSources[id] = [src, gain];
+		writeAudioControlHTML(val, id);
 	}, function onDecodeFailure() { alert('encode error'); });
 
-
-	var e = document.getElementById(id);
-
-	e.onclick = function() { 
-		audioSources[e.id][0].start(0);
-		writePauseButton(e.id);
-   	};
+	//audioSources[id][0].start(0);
 }
 
 // bind to appropriate elements

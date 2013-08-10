@@ -121,12 +121,12 @@ function graph_function(f) {
 
 // events for inputs
 (function() {
-	hertzInput.onchange = function() {
+	hertzInput.onkeyup = function() {
 		// hertz has to be interpreted
 		graph_current_function();
 	};
 
-	signalInput.onchange = function() {
+	signalInput.onkeyup = function() {
 		graph_function(this.value);
 	};
 })();
