@@ -1,4 +1,3 @@
-// this file loads things up
 var canvas = document.getElementsByTagName('canvas')[0];
 var width = window.innerWidth;
 
@@ -8,6 +7,7 @@ var signalInput = document.getElementById('signal');
 var view = 'simple';
 
 var x_origin = 0;
+
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioContext = new AudioContext();
