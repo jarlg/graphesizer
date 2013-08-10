@@ -35,7 +35,7 @@ function createAudioElement() {
 	var e = document.getElementById(id);
 
 	// TODO add a button that changes between pause and play
-	e.onclick = function() { audioSources[e.id].start(); };
+	e.onclick = function() { audioSources[e.id].start(0); };
 }
 
 // bind to appropriate elements

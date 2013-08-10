@@ -9,6 +9,7 @@ var view = 'simple';
 
 var x_origin = 0;
 
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioContext = new AudioContext();
 var audioSources = [];
 
