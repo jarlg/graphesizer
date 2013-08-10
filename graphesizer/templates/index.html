@@ -1,60 +1,58 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>visualize audible signals :: graphesizer</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}" />
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
-	</head>
-	<body onload="def();">
-		<script>
-			var width = window.innerWidth;
-		</script>
-		<canvas class="graph"></canvas>
-		<span id="x"><input type="range" id="slider" min="20" step="1" class="x_zoom" /></span>
-		
-		Debug monitor:<br>
-		you see <output id="time">1.000</output> second(s) of sound<br>
-		x-zoom value: <output id="zoom">...</output><br>
-		<input type="range" min="10" max="240" step="2" class="y_zoom" value="100" onchange="setYZoom(this.value);" />
-		
-		<div id="inputs">
-			<form method="POST" action="/generate" onsubmit="return post_json(this)">
-				<p id="signal_view">
-				<span class="adjust"><i>f</i>(<i>x</i>): <input type="text" id="signal" name="signal" value="{{ signal }}" onkeyup="graph_function(this.value)" /></span>
-				</p>
-				<div id="audio_box">
-					<input type="submit" class="button" value="Generate" />
-				</div>
-			</form>
-			<a onclick="set_simple_view(); graph_current_function()">simple</a>
-			<a onclick="set_advanced_view(); graph_current_function()">advanced</a>
-		</div>
-		
-		<script type="text/javascript">
-		var canvas = document.getElementsByTagName('canvas')[0];
-		canvas.setAttribute('width', width + 'px');
-		canvas.setAttribute('height', '500px');
+<head>
+	<title>Graphesizer :: a mathematical approach to sound</title>
 
-		// hey this algorithm works pretty well for all audible signals..
-		function calcZoom(v) {
-			return Math.pow(v, 2) * 4;
-		};
-		
-		def = function() {
-			x = "{{ signal }}",
-			slider = document.getElementById('slider');
-			slider.setAttribute('value', (width - 1) / 2);
-			slider.setAttribute('max', width + 1);
-			slider.setAttribute('onchange', "setXZoom(calcZoom(this.value)); time.value=(((canvas.width - 20) / 2) / this.value).toFixed(3); zoom.value=this.value/2;");
-			graph_function(x);
-		};
-		</script>
-		
-		<script type="text/javascript" src="{{ url_for('static', filename='js/views.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('static', filename='js/sampler.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('static', filename='js/wave.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('static', filename='js/play_audio.js') }}"></script>
-	 </body>
- </html>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+
+</head>
+<body>
+	<canvas class="graph"></canvas>
+	<span id="x"><input type="range" id="x-slider" min="20" step="1" class="x_zoom" /></span>
+	
+	<div id="lCol" class="col">
+		<b>You are currently seeing:</b> <output id="time">1.000</output>s sound<br><br>
+		<!-- x-zoom value: <output id="zoom">...</output><br> -->
+		<b>Adjust amplitude:</b><br>
+		<input type="range" id="y-slider" class="slider" min="10" max="240" step="2" class="y_zoom" value="100" />
+	</div>
+	
+	<div id="mCol" class="col">
+		<div id="inputs">
+			<p id="toggle"><a id='simple_toggle' href="#simple">simple</a> | <a id='advanced_toggle' href="#advanced">advanced</a></p>
+				<div id="simple"></div>
+				<div id="advanced"></div>
+				<div id="smpl">
+					<p>
+						<span class="adjust"><b>Frequency:
+						<input type="text" id="hertz" name="hertz" value=368 />Hz</span>
+					</b></p>
+				</div>
+				
+				<div id="adv">
+					<p>
+						<span class="adjust"><b><i>f </i>(<i>x</i>):</b>
+							<input type="text" id="signal" name="signal" value="{{ signal }}" /></span>
+					</p>
+				</div>
+				
+				<input id="submit" type="submit" class="button" value="Generate" />
+				<p id="or">or <a href="#">upload</a></p>
+			</form>
+		</div>
+	</div>
+	
+	<div id="rCol" class="col">
+		<b>Your sounds:</b>
+		<div id="sounds"></div>
+	</div>
+	
+	<script type="text/javascript" src="{{ url_for('static', filename='js/load.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/zoom.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/sampler.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/wave.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/play_audio.js') }}"></script>
+</body>
+</html>

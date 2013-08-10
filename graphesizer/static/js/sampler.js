@@ -46,5 +46,5 @@ function sample_audio(f, hz) {
 		audio[i] = base_audio[i%base_audio.length];
 	}
 
-	return base_audio;
+	return audio;
 };

@@ -1,18 +1,8 @@
-// VARS
-var defZoom = (window.innerWidth - 20);
-// origins for axis
-var y_origin = (canvas.height / 2) + 0.5;
-var x_origin = 0;
-//x_origin = 0;
-//zoom means n pixels corresponding to 1 x on graph
-var x_zoom = defZoom;
-var y_zoom = 200; // now we use zoom_fit to find a fitting zoom
-
 function graph_current_function() {
 	if (view == "advanced") {
  		f = document.getElementById('signal').value;
 	}
-	else {
+	else if (view == 'simple') {
 		f = document.getElementById('hertz').value;
 	}
  	graph_function(f);
@@ -29,7 +19,7 @@ function setYZoom(val) {
 }
 
 function draw_axis() {
- 	var canvas = document.getElementsByTagName("canvas")[0];
+	var y_origin = (canvas.height / 2) + 0.5;
  	var context = canvas.getContext("2d");
  	context.beginPath();
 
@@ -72,6 +62,7 @@ function y_zoom_fit(f) {
 			highest = y; 
 		}
 	}
+	var y_zoom = document.getElementById('y-slider').value;
 	return (y_zoom / highest); // let's normalize to y_zoom
 }
 
@@ -81,8 +72,8 @@ function graph_function(f) {
 		f = "sin(" + f + " * 2 * pi * x)";
 	}
 
- 	var canvas = document.getElementsByTagName("canvas")[0];
  	var context = canvas.getContext("2d");
+	var y_origin = (canvas.height / 2) + 0.5;
 
 	var y_factor = y_zoom_fit(f);
 
@@ -109,3 +100,50 @@ function graph_function(f) {
  	context.stroke();
 }
 
+// Let's draw the initial graph based on default value in our input
+// and prepare the slider according to initial zoom
+(function() {
+	var xSlider = document.getElementById('x-slider');
+	xSlider.setAttribute('value', 112);
+	xSlider.setAttribute('max', width + 20);
+	xSlider.onchange = function() {
+		setXZoom(calculateZoom(this.value));
+ 		time.value = (((canvas.width - 20) / 2) / this.value).toFixed(3);
+	};
+
+	var ySlider = document.getElementById('y-slider');
+	ySlider.onchange = function() {
+		setYZoom(this.value);
+	};
+
+	setXZoom(50000);
+})();
+
+// events for inputs
+(function() {
+	hertzInput.onchange = function() {
+		// hertz has to be interpreted
+		graph_current_function();
+	};
+
+	signalInput.onchange = function() {
+		graph_function(this.value);
+	};
+})();
+
+// events for view toggle
+(function() {
+	var simpleToggle = document.getElementById('simple_toggle');
+	var advToggle = document.getElementById('advanced_toggle');
+
+	simpleToggle.onclick = function() {
+		view = 'simple';
+		graph_current_function();
+	};
+
+	advToggle.onclick = function() {
+		view = 'advanced';
+		graph_current_function();
+	};
+
+})();
