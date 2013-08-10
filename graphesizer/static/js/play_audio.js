@@ -1,12 +1,43 @@
-function writeAudioControlHTML(label, num) {
+function writeAudioControlHTML(label, id) {
 	var container = document.getElementById('sounds');
-	container.innerHTML += "<p class='play' id='" + num +
-							"'>" + label + "</p>";
+	container.innerHTML += "<p>" + label +
+ 	   "  <span id='" + id + "-container'></span></p>";
+	writePlayButton(id);
 }
+
+function writePauseButton(id) {
+	var e = document.getElementById(id);
+	var container = document.getElementById(id + "-container");
+	container.innerHTML = "<i class='icon-stop' id='" + id + "'></i>";
+
+	var btn = document.getElementById(id);
+	btn.onclick = function() {
+		writePlayButton(e.id);
+		var gain = audioSources[e.id][1];
+		gain.gain.value = 0;
+	};
+}
+
+function writePlayButton(id) {
+	var e = document.getElementById(id);
+	var container = document.getElementById(id + "-container");
+	container.innerHTML = "<i class='icon-play' id='" + id + "'></i>";
+
+	var btn = document.getElementById(id);
+	btn.onclick = function() {
+		writePauseButton(e.id);
+		var gain = audioSources[e.id][1];
+		gain.gain.value = 1;
+	};
+}
+
 
 function createAudioElement() {
 
 	var src = audioContext.createBufferSource();
+	if (!audioContext.createGain) {
+		audioContext.createGain = context.createGainNode;
+	}
 	var gain = audioContext.createGain();
 
 	var val = getInputValue();
@@ -28,14 +59,16 @@ function createAudioElement() {
 		src.loop = true;
 		src.connect(gain);
 		gain.connect(audioContext.destination);
-		audioSources[id] = src;
+		audioSources[id] = [src, gain];
 	}, function onDecodeFailure() { alert('encode error'); });
 
 
 	var e = document.getElementById(id);
 
-	// TODO add a button that changes between pause and play
-	e.onclick = function() { audioSources[e.id].start(0); };
+	e.onclick = function() { 
+		audioSources[e.id][0].start(0);
+		writePauseButton(e.id);
+   	};
 }
 
 // bind to appropriate elements
@@ -43,8 +76,3 @@ function createAudioElement() {
 	var btn = document.getElementById('submit');
 	btn.onclick = createAudioElement;
 })();
-
-//s.addEventListener("mousedown", function() {
-//	// TODO change back to play-element after click
-//	src.stop();
-//	gain.setValueAtTime(0, ctx.currentTime);}, false);
