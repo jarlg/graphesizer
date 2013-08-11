@@ -2,13 +2,9 @@ GRAPHESIZER
 ==============
 *see and listen to mathematical functions*
 
-Interesting parts:
--------------------
-* static/js/canvas.js:  logic for drawing graphs
-* sound.py:  logic for creating sounds
+Uses bleeding edge technology like Web Audio API and html5 range sliders (soon to be implemented in javascript).
 
-Thanks to someone for convert-math-to-js.js and normalize.css
+Currently requires, like, Firefox 24 and other new browsers to function.
 
-Currently doesn't work in Firefox due to html5 input type="range" magic.
 
-project by Øystein and Jarl
+This is a project by Jarl and Øystein
