@@ -1,7 +1,7 @@
-function writeAudioControlHTML(label, id) {
+function writeAudioControlHTML(view, label, id) {
 	var container = document.getElementById('sounds');
-	container.innerHTML += "<li><span class='label'>" +label+
- 	   "</span>  <span id='" +id+ "-container'></span>";
+	container.innerHTML += "<li><a href='#" +view+ "' class='label'>" +label+
+ 	   "</a>  <span id='" +id+ "-container'></span>";
 
 	var labels = document.querySelectorAll(".label");
 	for (var i = 0; i < labels.length; i++) {
@@ -79,10 +79,8 @@ function createAudioElement() {
 		src.connect(gain);
 		gain.connect(audioContext.destination);
 		audioSources[id] = [src, gain];
-		writeAudioControlHTML(val, id);
+		writeAudioControlHTML(view, val, id);
 	}, function onDecodeFailure() { alert('encode error'); });
-
-	//audioSources[id][0].start(0);
 }
 
 // bind to appropriate elements
