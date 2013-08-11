@@ -29,3 +29,7 @@ function getInputValue() {
 		return document.getElementById('signal').value;
 	}
 }
+
+function isHertz(val) {
+	return !isNaN(val);
+}

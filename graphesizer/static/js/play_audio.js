@@ -1,7 +1,21 @@
 function writeAudioControlHTML(label, id) {
 	var container = document.getElementById('sounds');
-	container.innerHTML += "<p>" + label +
- 	   "  <span id='" + id + "-container'></span></p>";
+	container.innerHTML += "<li><span class='label'>" +label+
+ 	   "</span>  <span id='" +id+ "-container'></span>";
+
+	var labels = document.querySelectorAll(".label");
+	for (var i = 0; i < labels.length; i++) {
+		labels[i].onclick = function() {
+			if (isHertz(this.innerHTML)) {
+				hertzInput.value = this.innerHTML;
+			}
+			else {
+				signalInput.value = this.innerHTML;
+			}
+			graph_current_function();
+		};
+	}
+
 	writeButton(id);
 }
 
@@ -75,4 +89,12 @@ function createAudioElement() {
 (function() {
 	var btn = document.getElementById('submit');
 	btn.onclick = createAudioElement;
+
+	hertzInput.onkeypress = function(e) {
+		if (e.keyCode == 13) {
+			createAudioElement();
+		}
+	};
+
+	signalInput.onkeypress = hertzInput.onkeypress;
 })();
