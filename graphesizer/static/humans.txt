@@ -1,0 +1,12 @@
+/* TEAM */
+Name: Jarl Gunnar T. Flaten
+Location: Tromsø, Norway
+
+Name: Øystein Knutsen
+Location: Tromsø, Norway
+
+
+/* SITE */
+Last update: Frequently
+Standards: HTML5, CSS3
+Software: Flask, Nginx, Vanilla JS*
