@@ -2,6 +2,8 @@ var canvas = document.getElementsByTagName('canvas')[0];
 var width = window.innerWidth;
 var context = canvas.getContext("2d");
 
+var x_zoom;
+
 var checkbox = document.getElementById('sample-checkbox');
 var selection1 = null, selection2 = null;
 

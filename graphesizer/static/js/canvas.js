@@ -166,20 +166,21 @@ function select_area(x1, x2) {
 // Let's draw the initial graph based on default value in our input
 // and prepare the slider according to initial zoom
 (function() {
+	setXZoom(50000);
+ 	time.value = calculate_time(x_zoom);
+
 	var xSlider = document.getElementById('x-slider');
 	xSlider.setAttribute('value', 112);
 	xSlider.setAttribute('max', width + 20);
 	xSlider.onchange = function() {
-		setXZoom(calculateZoom(this.value));
- 		time.value = (((canvas.width - 20) / 2) / this.value).toFixed(3);
+		setXZoom(calculate_zoom(this.value));
+ 		time.value = calculate_time(x_zoom);
 	};
 
 	var ySlider = document.getElementById('y-slider');
 	ySlider.onchange = function() {
 		setYZoom(this.value);
 	};
-
-	setXZoom(50000);
 })();
 
 // events for inputs
