@@ -203,6 +203,9 @@ function select_area(x1, x2) {
 
 	simpleToggle.onclick = function() {
 		view = 'simple';
+		selection1 = null;
+		selection2 = null;
+		checkbox.checked = false;
 		graph_current_function();
 	};
 
