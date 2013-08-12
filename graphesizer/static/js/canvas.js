@@ -98,9 +98,15 @@ function graph_function(f) {
  	context.closePath();
  	context.stroke();
 
+	if (selection1 !== null || selection2 !== null) {
+		select_area(selection1, selection2);
+	}
 }
 
 function select_area(x1, x2) {
+	context.fillStyle = "rgba(0, 0, 0, 0.2)";
+	context.strokeStyle = "rgba(0, 0, 0, 0.4)";
+	context.lineWidth = 2;
 	context.beginPath();
 	context.moveTo(x1, 0);
 	context.lineTo(x1, canvas.height);
@@ -109,10 +115,53 @@ function select_area(x1, x2) {
 	context.lineTo(x2, canvas.height);
 	context.closePath();
 	context.stroke();
+
+	if (x1 !== null && x2 !== null) {
+		context.fillRect(x1, 0, (x2 - x1), canvas.height);
+	}
 }
 
+// onclick event for canvas, to capture selection
+(function() {
+	canvas.ondblclick = function(e) {
+		if (checkbox.checked) {
+			selection1 = e.pageX;
+			selection2 = null;
+			graph_current_function();
+		}
+	};
 
 
+	canvas.onmousedown = function(e) {
+		if (checkbox.checked) {
+			// only care about mouse move while mouse is down
+			canvas.onmousemove = canvas.onmousedown;
+			if (selection1 === null) {
+				selection1 = e.pageX;
+			}
+			else {
+				selection2 = e.pageX;
+			}
+			graph_current_function();
+		}
+	};
+
+	canvas.onmouseup = function() {
+		canvas.onmousemove = null;
+	};
+
+})();
+
+// sample-checkbox should reset selection values
+(function() {
+	checkbox.onchange = function() {
+		if (!this.checked) {
+			selection1 = null;
+			selection2 = null;
+			graph_current_function();
+		}
+	};
+})();
 
 // Let's draw the initial graph based on default value in our input
 // and prepare the slider according to initial zoom
