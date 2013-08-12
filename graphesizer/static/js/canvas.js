@@ -72,7 +72,6 @@ function graph_function(f) {
 		f = "sin(" + f + " * 2 * pi * x)";
 	}
 
- 	var context = canvas.getContext("2d");
 	var y_origin = (canvas.height / 2) + 0.5;
 
 	var y_factor = y_zoom_fit(f);
@@ -98,7 +97,22 @@ function graph_function(f) {
  	}
  	context.closePath();
  	context.stroke();
+
 }
+
+function select_area(x1, x2) {
+	context.beginPath();
+	context.moveTo(x1, 0);
+	context.lineTo(x1, canvas.height);
+
+	context.moveTo(x2, 0);
+	context.lineTo(x2, canvas.height);
+	context.closePath();
+	context.stroke();
+}
+
+
+
 
 // Let's draw the initial graph based on default value in our input
 // and prepare the slider according to initial zoom
@@ -122,12 +136,13 @@ function graph_function(f) {
 // events for inputs
 (function() {
 	hertzInput.onkeyup = function() {
-		// hertz has to be interpreted
+		view = 'simple';
 		graph_current_function();
 	};
 
 	signalInput.onkeyup = function() {
-		graph_function(this.value);
+		view = 'advanced';
+		graph_current_function();
 	};
 })();
 
