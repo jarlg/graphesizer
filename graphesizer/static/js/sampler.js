@@ -8,7 +8,7 @@ function sample_audio(f, hz) {
 	var audio = [];
 	var base_audio = [];
 	var DURATION = 10; // default dur; changed if we have a frequency to go by
-	var RATE = 96000.0; // best results so far 
+	var RATE = 48000; // best results so far 
 
 	if (!checkbox.checked) { 
 		if (typeof hz !== 'undefined') {
