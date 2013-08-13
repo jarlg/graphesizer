@@ -31,7 +31,7 @@ function encodeWAV(samples){
   /* sample format (raw) */
   view.setUint16(20, 1, true);
   /* channel count */
-  view.setUint16(22, 1, true);
+  view.setUint16(22, 2, true);
   /* sample rate */
   view.setUint32(24, RATE, true);
   /* byte rate (sample rate * block align) */

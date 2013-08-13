@@ -2,6 +2,14 @@
 // so we don't sample it server-side - because
 // how can we sanitize the input for eval()?
 
+function mono_to_stereo(input) {
+	var output = []
+	for (var i = 0; i < input.length; i++) {
+		output.push(input[i]);
+		output.push(input[i]);
+	}
+	return output;
+}
 
 function sample_audio(f, hz) {
 	var SAMPLES;
@@ -80,6 +88,8 @@ function sample_audio(f, hz) {
 			audio[i] = audio[i] * Math.abs(i - audio.length) / fade_threshold;
 		}
 	}
+
+	audio = mono_to_stereo(audio);
 
 	return audio;
 };
