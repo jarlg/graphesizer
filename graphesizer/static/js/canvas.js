@@ -152,6 +152,18 @@ function select_area(x1, x2) {
 
 })();
 
+// scroll events for canvas
+(function() {
+	canvas.onmousewheel = function(event) {
+		var slider = document.getElementById('x-slider');
+		if (x_zoom + (event.wheelDeltaY * 100) > slider.min) {
+			setXZoom(x_zoom + (event.wheelDeltaY * 100));
+			slider.value = calculate_slider_pos(x_zoom);
+		}
+	};
+})();
+
+
 // sample-checkbox should reset selection values
 (function() {
 	checkbox.onchange = function() {
