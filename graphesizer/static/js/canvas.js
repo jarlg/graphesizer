@@ -156,8 +156,8 @@ function select_area(x1, x2) {
 (function() {
 	canvas.onmousewheel = function(event) {
 		var slider = document.getElementById('x-slider');
-		if (x_zoom + (event.wheelDeltaY * 100) > slider.min) {
-			setXZoom(x_zoom + (event.wheelDeltaY * 100));
+		if (x_zoom + (event.wheelDeltaY * 50) > slider.min) {
+			setXZoom(x_zoom + (event.wheelDeltaY * 50));
 			slider.value = calculate_slider_pos(x_zoom);
 		}
 	};
