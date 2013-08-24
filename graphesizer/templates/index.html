@@ -10,46 +10,38 @@
 </head>
 <body>
 	<canvas class="graph"></canvas>
-	<span id="x"><input type="range" id="x-slider" min="20" step="1" class="x_zoom" /></span>
-	
+	<div id="x"><input type="range" id="x-slider" min="20" step="1" class="x_zoom" /></div>
+
 	<div id="lCol" class="col">
-		<b>You are currently seeing:</b> <output id="time">1.000</output>s sound<br><br>
-		<!-- x-zoom value: <output id="zoom">...</output><br> -->
-		<b>Adjust amplitude:</b><br>
-		<input type="range" id="y-slider" class="slider" min="10" max="240" step="2" class="y_zoom" value="100" />
+		<b>You are currently seeing:</b> <output id="time"></output>s sound<br><br> 
+		<b>Adjust amplitude:</b><br> 
+		<input type="range" id="y-slider" class="slider" min="10" max="240" step="2" class="y_zoom" value="150" />
 	</div>
-	
+
 	<div id="mCol" class="col">
 		<div id="inputs">
 			<p id="toggle"><a id='simple_toggle' href="#simple">simple</a> | <a id='advanced_toggle' href="#advanced">advanced</a></p>
-				<div id="simple"></div>
-				<div id="advanced"></div>
-				<div id="smpl">
-					<p>
-						<span class="adjust"><b>Frequency:
-						<input type="text" id="hertz" name="hertz" value=368 />Hz</span>
-					</b></p>
-				</div>
-				
-				<div id="adv">
-					<p>
-						<span class="adjust"><b><i>f </i>(<i>x</i>):</b>
-							<input type="text" id="signal" name="signal" value="{{ signal }}" /></span>
-						Select sample-area: <input type="checkbox" id="sample-checkbox" />
-					</p>
-				</div>
-				
-				<input id="submit" type="submit" class="button" value="Generate" />
-				<p id="or">or <a href="#">upload</a></p>
-			</form>
+			<div id="simple"></div>
+			<div id="advanced"></div>
+			<div id="smpl">
+				<p><b>Frequency: <input type="text" id="hertz" name="hertz" value=368 />Hz</b></p>
+			</div>
+
+			<div id="adv">
+				<p><b><i>f </i>(<i>x</i>):</b> <input type="text" id="signal" name="signal" value="{{ signal }}" />
+				Use sample area: <input type="checkbox" id="sample-checkbox" /></p>
+			</div>
+
+			<input id="submit" type="submit" class="button" value="Generate" />
+			<p id="or">or <a href="#">upload</a></p>
 		</div>
 	</div>
-	
+
 	<div id="rCol" class="col">
 		<b>Your sounds:</b>
 		<ul id="sounds"></ul>
 	</div>
-	
+
 	<script type="text/javascript" src="{{ url_for('static', filename='js/load.js') }}"></script>
 	<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
 	<script type="text/javascript" src="{{ url_for('static', filename='js/zoom.js') }}"></script>
