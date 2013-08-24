@@ -15,9 +15,14 @@ var view = 'simple';
 var x_origin = 0;
 
 
-window.AudioContext = window.AudioContext || window.webkitAudioContext;
-var audioContext = new AudioContext();
-var audioSources = [];
+try {
+	window.AudioContext = window.AudioContext || window.webkitAudioContext;
+	var audioContext = new AudioContext();
+	var audioSources = [];
+}
+catch (e) {
+	Avgrund.show('#not-supported');
+}
 
 // Let's shape the canvas to the screen
 (function() {
