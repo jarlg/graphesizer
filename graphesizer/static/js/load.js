@@ -14,7 +14,6 @@ var view = 'simple';
 
 var x_origin = 0;
 
-
 try {
 	window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	var audioContext = new AudioContext();
@@ -30,6 +29,34 @@ catch (e) {
 
 	canvas.setAttribute('width', width + 'px');
 	canvas.setAttribute('height', cHeight+'%');
+})();
+
+// Firefox's range slider doesn't update realtime
+(function() {
+	// retarded if.. find a standard for checking browsers
+	if (document.mozVisibilityState == 'visible') {
+		var xSlider = document.getElementById('x-slider');
+
+		xSlider.last = 0;
+
+		xSlider.onmousedown = function() {
+			xSlider.onmousemove = function() {
+				// only render every other time.. otherwise too heavy
+				if (this.last > 1) {
+					setXZoom(calculate_zoom(this.value));
+					time.value = calculate_time(x_zoom);
+					this.last = 0;
+				}
+				else {
+					this.last++;
+				}
+			};
+		};
+
+		xSlider.onmouseup = function() {
+			xSlider.onmousemove = function() {};
+		};
+	}
 })();
 
 function getInputValue() {
