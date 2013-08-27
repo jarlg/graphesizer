@@ -184,10 +184,32 @@ function select_area(x1, x2) {
 	var xSlider = document.getElementById('x-slider');
 	xSlider.setAttribute('value', 112);
 	xSlider.setAttribute('max', width + 20);
-	xSlider.onchange = function() {
-		setXZoom(calculate_zoom(this.value));
+
+	function redraw(v) {
+		setXZoom(calculate_zoom(v));
  		time.value = calculate_time(x_zoom);
-	};
+	}
+
+	// Firefox's range slider doesn't update realtime
+	var FF = /Firefox/i.test(navigator.userAgent);
+	if (FF) {
+		// only redraw every other time.. too heavy otherwise
+		xSlider.count = 0;
+		xSlider.oninput = function() {
+			if (this.count == 1) {
+				redraw(this.value);
+				this.count = 0;
+			}
+			else {
+				this.count++;
+			}
+		}
+	}
+	else {
+		xSlider.onchange = function() {
+			redraw(this.value);
+		}
+	}
 
 	var ySlider = document.getElementById('y-slider');
 	ySlider.onchange = function() {
