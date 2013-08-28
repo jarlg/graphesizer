@@ -1,18 +1,17 @@
-var canvas = document.getElementsByTagName('canvas')[0];
-var width = window.innerWidth;
-var context = canvas.getContext("2d");
+var canvas = document.getElementById('graph'),
+	width = window.innerWidth,
+	ctx = canvas.getContext('2d');
 
-var x_zoom;
+var x_zoom,
+	x_origin = 0;
 
-var checkbox = document.getElementById('sample-checkbox');
-var selection1 = null, selection2 = null;
+var checkbox = document.getElementById('sample-checkbox'),
+	selection1 = null, selection2 = null;
 
-var hertzInput = document.getElementById('hertz');
-var signalInput = document.getElementById('signal');
+var hertzInput = document.getElementById('hertz'),
+	signalInput = document.getElementById('signal');
 
 var view = 'simple';
-
-var x_origin = 0;
 
 try {
 	window.AudioContext = window.AudioContext || window.webkitAudioContext;

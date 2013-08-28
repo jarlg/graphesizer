@@ -7,7 +7,6 @@
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/avgrund.css') }}" />
 	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
 	<link rel="author" href="humans.txt" />
-
 </head>
 <body>
 	<aside id="not-supported" class="avgrund-popup">
@@ -21,7 +20,7 @@
 	</aside>
 
 	<div class="avgrund-contents">
-	<canvas class="graph"></canvas>
+	<canvas id="graph" class="graph"></canvas>
 		<div id="x"><input type="range" id="x-slider" min="20" step="1" class="x_zoom" /></div>
 
 		<div id="lCol" class="col">

@@ -20,37 +20,37 @@ function setYZoom(val) {
 
 function draw_axis() {
 	var y_origin = (canvas.height / 2) + 0.5;
- 	var context = canvas.getContext("2d");
- 	context.beginPath();
+ 	var ctx = canvas.getContext("2d");
+ 	ctx.beginPath();
 
  	// x-axis
- 	context.moveTo(0, y_origin);
- 	context.lineTo(canvas.width, y_origin);
+ 	ctx.moveTo(0, y_origin);
+ 	ctx.lineTo(canvas.width, y_origin);
 
  	// y-axis
- 	context.moveTo(x_origin, 0);
- 	context.lineTo(x_origin, canvas.height);
+ 	ctx.moveTo(x_origin, 0);
+ 	ctx.lineTo(x_origin, canvas.height);
 
  	// zoom; default 44100px = 1
  	// unit axis
  	for (var i = x_origin + x_zoom; i < canvas.width; i += x_zoom) {
- 		context.moveTo(i, y_origin - 3);
- 		context.lineTo(i, y_origin + 3);
+ 		ctx.moveTo(i, y_origin - 3);
+ 		ctx.lineTo(i, y_origin + 3);
  	}
 
  	// y-axis over x-axis
  	for (var i = y_origin - y_zoom; i > 0; i -= y_zoom) {
- 		context.moveTo(x_origin - 3, i);
- 		context.lineTo(x_origin + 3, i);
+ 		ctx.moveTo(x_origin - 3, i);
+ 		ctx.lineTo(x_origin + 3, i);
  	}
  	for (var i = y_origin + y_zoom; i < canvas.height; i += y_zoom) {
- 		context.moveTo(x_origin - 3, i);
- 		context.lineTo(x_origin + 3, i);
+ 		ctx.moveTo(x_origin - 3, i);
+ 		ctx.lineTo(x_origin + 3, i);
  	}
 
- 	context.closePath();
- 	context.strokeStyle = "#000";
- 	context.stroke();
+ 	ctx.closePath();
+ 	ctx.strokeStyle = "#000";
+ 	ctx.stroke();
 }
 
 function y_zoom_fit(f) {
@@ -66,37 +66,48 @@ function y_zoom_fit(f) {
 	return (y_zoom / highest); // let's normalize to y_zoom
 }
 
-function graph_function(f) {
+// graph points with resolution of 2 per x
+function graph_points(f) {
+	var x,
+		result = [];
 
+ 	for (var i = 0; i < canvas.width; i += 0.5) {
+ 		 x = (i - x_origin) / x_zoom;
+		 result.push((-1 * eval(f)));
+	}
+	return result;
+}
+
+function graph_function(f) {
+	var x,
+		y,
+		y_origin = (canvas.height / 2) + 0.5;
+	
 	if (view == 'simple') {
 		f = "sin(" + f + " * 2 * pi * x)";
 	}
 
-	var y_origin = (canvas.height / 2) + 0.5;
+	//var y_factor = 1.0; //y_zoom_fit(f);
 
-	var y_factor = y_zoom_fit(f);
+	// clear canvas
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
- 	canvas.width = canvas.width;
- 	// redraw of axis every time is heavy... crash!
- 	//draw_axis();
+ 	ctx.fillStyle = "#E01B5D";
+ 	ctx.strokeStyle = "#E01B5D";
 
- 	context.fillStyle = "#E01B5D";
- 	context.strokeStyle = "#E01B5D";
- 	context.beginPath();
+	var points = graph_points(f);
+	
+	ctx.beginPath();
+	ctx.moveTo(0, points[0]);
 
- 	for (var i = 0; i < canvas.width; i += 0.5) {
- 		var x = (i - x_origin) / x_zoom;
- 		var y_coord = (-1 * eval(mathjs(f)) * y_factor) + y_origin;
+	for (var i = 1; i < points.length; i++) {
+		x = i / 2;
+		y = points[i] + y_origin;
 
- 		if (i == 0) {
- 			context.moveTo(x, y_coord);
- 		}
-
- 		context.lineTo(i, y_coord);
- 		context.moveTo(i, y_coord);
+ 		ctx.lineTo(x, y);
+ 		ctx.moveTo(x, y);
  	}
- 	context.closePath();
- 	context.stroke();
+ 	ctx.stroke();
 
 	if (selection1 !== null || selection2 !== null) {
 		select_area(selection1, selection2);
@@ -104,20 +115,20 @@ function graph_function(f) {
 }
 
 function select_area(x1, x2) {
-	context.fillStyle = "rgba(0, 0, 0, 0.2)";
-	context.strokeStyle = "rgba(0, 0, 0, 0.4)";
-	context.lineWidth = 2;
-	context.beginPath();
-	context.moveTo(x1, 0);
-	context.lineTo(x1, canvas.height);
+	ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+	ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.moveTo(x1, 0);
+	ctx.lineTo(x1, canvas.height);
 
-	context.moveTo(x2, 0);
-	context.lineTo(x2, canvas.height);
-	context.closePath();
-	context.stroke();
+	ctx.moveTo(x2, 0);
+	ctx.lineTo(x2, canvas.height);
+	ctx.closePath();
+	ctx.stroke();
 
 	if (x1 !== null && x2 !== null) {
-		context.fillRect(x1, 0, (x2 - x1), canvas.height);
+		ctx.fillRect(x1, 0, (x2 - x1), canvas.height);
 	}
 }
 
@@ -193,15 +204,17 @@ function select_area(x1, x2) {
 	// Firefox's range slider doesn't update realtime
 	var FF = /Firefox/i.test(navigator.userAgent);
 	if (FF) {
-		// only redraw every other time.. too heavy otherwise
-		xSlider.count = 0;
+		// only redraw on value change
+		
+		var v = xSlider.value;
+
+		xSlider.onclick = function() {
+			v = this.value;
+		}
+
 		xSlider.oninput = function() {
-			if (this.count == 1) {
+			if (this.value != v) {
 				redraw(this.value);
-				this.count = 0;
-			}
-			else {
-				this.count++;
 			}
 		}
 	}
