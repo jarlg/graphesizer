@@ -53,17 +53,16 @@ function draw_axis() {
  	ctx.stroke();
 }
 
-function y_zoom_fit(f) {
-	var highest = 0;
-	for (var i = 0; i < canvas.width; i += 0.5) {
- 		var x = (i - x_origin) / x_zoom;
-		var y = abs(eval(mathjs(f)));
-		if (y > highest) {
-			highest = y; 
-		}
+function normalize_points(p, n) {
+	var highest = 0,
+		v;
+
+	for (var i = 0; i < p.length; i++) {
+		v = abs(p[i]);
+		highest = (v > highest) ? v : highest;
 	}
-	var y_zoom = document.getElementById('y-slider').value;
-	return (y_zoom / highest); // let's normalize to y_zoom
+
+	return p.map(function(elem) { return elem * n / highest; });
 }
 
 // graph points with resolution of 2 per x
@@ -76,6 +75,42 @@ function graph_points(f) {
 		 result.push((-1 * eval(f)));
 	}
 	return result;
+}
+
+// FF performs better with many strokes;
+// Chrome (Webkit?) with just one big at the end
+function draw_points(points, y_origin) {
+	var x, y;
+
+	// check if Firefox
+	if (/Firefox/i.test(navigator.userAgent)) {
+		var last = [0, points[0]];
+		for (var i = 1; i < points.length; i++) {
+			x = i / 2;
+			y = points[i] + y_origin;
+
+			ctx.beginPath();
+			ctx.moveTo.apply(ctx, last);
+			ctx.lineTo(x, y);
+			ctx.stroke();
+
+			last = [x, y];
+ 		}
+	}
+	else {
+		ctx.beginPath();
+		ctx.moveTo(0, points[0]+y_origin);
+
+		for (var i = 1; i < points.length; i++) {
+			x = i / 2;
+			y = points[i] + y_origin;
+
+			ctx.lineTo(x, y);
+			ctx.moveTo(x, y);
+		}
+
+		ctx.stroke();
+	}
 }
 
 function graph_function(f) {
@@ -95,19 +130,9 @@ function graph_function(f) {
  	ctx.fillStyle = "#E01B5D";
  	ctx.strokeStyle = "#E01B5D";
 
-	var points = graph_points(f);
+	var points = normalize_points(graph_points(f), y_zoom);
 	
-	ctx.beginPath();
-	ctx.moveTo(0, points[0]);
-
-	for (var i = 1; i < points.length; i++) {
-		x = i / 2;
-		y = points[i] + y_origin;
-
- 		ctx.lineTo(x, y);
- 		ctx.moveTo(x, y);
- 	}
- 	ctx.stroke();
+	draw_points(points, y_origin);
 
 	if (selection1 !== null || selection2 !== null) {
 		select_area(selection1, selection2);
