@@ -195,8 +195,8 @@ function select_area(x1, x2) {
 		// chrome uses wheelDeltaY, firefox uses deltaY
 		var dy = ("wheelDeltaY" in event) ? "wheelDeltaY" : "deltaY";
 
-		// chrome's delta y is 120 when firefox's is 3 (a normal scroll)
-		var factor = (dy == "deltaY") ? 40 : 1;
+		// chrome's delta y is 120 when firefox's is -3 (a normal scroll)
+		var factor = (dy == "deltaY") ? -40 : 1;
 
 		if (x_zoom + (event[dy] * factor * Math.log(x_zoom / 5)) > slider.min) {
 			setXZoom(x_zoom + (event[dy] * factor * Math.log(x_zoom / 5)));
@@ -265,7 +265,7 @@ function select_area(x1, x2) {
 
 		ySlider.oninput = function() {
 			if (this.value != vy) {
-				redraw(this.value);
+				setYZoom(this.value);
 			}
 		}
 	}
