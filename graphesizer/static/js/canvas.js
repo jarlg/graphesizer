@@ -230,6 +230,7 @@ function select_area(x1, x2) {
 	setXZoom(50000);
  	time.value = calculate_time(x_zoom);
 
+	var ySlider = document.getElementById('y-slider');
 	var xSlider = document.getElementById('x-slider');
 	xSlider.setAttribute('value', 112);
 	xSlider.setAttribute('max', width + 20);
@@ -243,15 +244,27 @@ function select_area(x1, x2) {
 	var FF = /Firefox/i.test(navigator.userAgent);
 	if (FF) {
 		// only redraw on value change
+		// might be unneccesary -- check oninput implementation
 		
-		var v = xSlider.value;
+		var vx = xSlider.value;
+		var vy = ySlider.value;
 
 		xSlider.onclick = function() {
-			v = this.value;
+			vx = this.value;
 		}
 
 		xSlider.oninput = function() {
-			if (this.value != v) {
+			if (this.value != vx) {
+				redraw(this.value);
+			}
+		}
+
+		ySlider.onclick = function() {
+			vy = this.value;
+		}
+
+		ySlider.oninput = function() {
+			if (this.value != vy) {
 				redraw(this.value);
 			}
 		}
@@ -260,12 +273,11 @@ function select_area(x1, x2) {
 		xSlider.onchange = function() {
 			redraw(this.value);
 		}
-	}
 
-	var ySlider = document.getElementById('y-slider');
-	ySlider.onchange = function() {
-		setYZoom(this.value);
-	};
+		ySlider.onchange = function() {
+			setYZoom(this.value);
+		};
+	}
 })();
 
 // events for inputs
