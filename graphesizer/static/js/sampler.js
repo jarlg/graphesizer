@@ -1,7 +1,3 @@
-// given a mathematical function, we can sample it
-// so we don't sample it server-side - because
-// how can we sanitize the input for eval()?
-
 function mono_to_stereo(input) {
 	var output = []
 	for (var i = 0; i < input.length; i++) {
@@ -54,14 +50,13 @@ function sample_audio(f, hz) {
 			var x = i / RATE;
 			base_audio[i] = eval(mathjs(f));
 		}
-
 	}
 	else if (checkbox.checked) {
 		var from = (selection1 - x_origin) / x_zoom;
 		var to = (selection2 - x_origin) / x_zoom;
 
 		for (var x = from; x < to; x += 1 / RATE) {
-		base_audio.push(eval(mathjs(f)));
+			base_audio.push(eval(mathjs(f)));
 		}
 	}
 	else {
@@ -79,7 +74,7 @@ function sample_audio(f, hz) {
 	}
 
 	// fade ends of audio, to reduce jitter
-	var fade_threshold = 0.005 * RATE;
+	var fade_threshold = 0.05 * RATE;
 	for (var i = 0; i < audio.length; i++) {
 		if (i < fade_threshold) {
 			audio[i] = audio[i] * i / fade_threshold;
