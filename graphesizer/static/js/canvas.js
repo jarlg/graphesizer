@@ -167,7 +167,6 @@ function select_area(x1, x2) {
 		}
 	};
 
-
 	canvas.onmousedown = function(e) {
 		if (checkbox.checked) {
 			// only care about mouse move while mouse is down
@@ -190,13 +189,27 @@ function select_area(x1, x2) {
 
 // scroll events for canvas
 (function() {
-	canvas.onmousewheel = function(event) {
+	function scrollToZoom(event) {
 		var slider = document.getElementById('x-slider');
-		if (x_zoom + (event.wheelDeltaY * Math.log(x_zoom / 5)) > slider.min) {
-			setXZoom(x_zoom + (event.wheelDeltaY * Math.log(x_zoom / 5)));
+
+		// chrome uses wheelDeltaY, firefox uses deltaY
+		var dy = ("wheelDeltaY" in event) ? "wheelDeltaY" : "deltaY";
+
+		// chrome's delta y is 120 when firefox's is 3 (a normal scroll)
+		var factor = (dy == "deltaY") ? 40 : 1;
+
+		if (x_zoom + (event[dy] * factor * Math.log(x_zoom / 5)) > slider.min) {
+			setXZoom(x_zoom + (event[dy] * factor * Math.log(x_zoom / 5)));
 			slider.value = calculate_slider_pos(x_zoom);
 		}
-	};
+	}
+
+	if ("onmousewheel" in canvas) {
+		canvas.onmousewheel = scrollToZoom;
+	}
+	else if ("onwheel" in canvas) {
+		canvas.onwheel = scrollToZoom;
+	}
 })();
 
 
