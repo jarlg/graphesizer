@@ -85,8 +85,8 @@ function draw_points(points, y_origin) {
 	// check if Firefox
 	if (/Firefox/i.test(navigator.userAgent)) {
 		var last = [0, points[0]];
-		for (var i = 1; i < points.length; i+=30) {
-			x = i;
+		for (var i = 1; i < points.length; i++) {
+			x = i / 2;
 			y = points[i] + y_origin;
 
 			ctx.beginPath();
@@ -95,9 +95,6 @@ function draw_points(points, y_origin) {
 			ctx.stroke();
 
 			last = [x, y];
-			if (x > width) {
-				break;
-			}
  		}
 	}
 	else {
