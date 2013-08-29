@@ -1,6 +1,7 @@
 GRAPHESIZER
 ==============
 *see and listen to mathematical functions*
+graphesizer.com
 
 Uses bleeding edge technology like Web Audio API and html5 range sliders (soon to be implemented in javascript).
 
