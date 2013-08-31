@@ -7,6 +7,7 @@ function mono_to_stereo(input) {
 	return output;
 }
 
+// TODO fix hz input when multiple freqs are input, parse it or smth
 function sample_audio(f, hz) {
 	var SAMPLES;
 	var audio = [];
@@ -14,9 +15,12 @@ function sample_audio(f, hz) {
 	var DURATION = 10; // default dur; changed if we have a frequency to go by
 	var RATE = 48000; // best results so far 
 
+	if (view == 'simple') {
+		f = parse_hz_input(f);
+	}
+
 	if (!checkbox.checked) { 
 		if (typeof hz !== 'undefined') {
-			f = "sin(" + f + " * 2 * pi * x)";
 			var threshold = 0.001; // seems to work well
 			var base_samples = RATE / hz; 
 

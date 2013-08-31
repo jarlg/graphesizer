@@ -18,6 +18,40 @@ function setYZoom(val) {
  	graph_current_function();
 }
 
+function parse_hz_input(str) {
+	var splits = ["+", "-", "*", "/", "(", ")"],
+		tmp = str,
+		res = "",
+		separator = "|";
+
+	// javascript's str.replace() sucks
+	tmp = tmp.split('');
+
+	for (var s = 0; s < splits.length; s++) {
+		for (var i = 0; i < tmp.length; i++) {
+			if (tmp[i] == splits[s]) {
+				tmp[i] = separator + splits[s] + separator;
+			}
+		}
+	}
+
+	var str_tmp = "";
+	for (var i = 0; i < tmp.length; i++) {
+		str_tmp += tmp[i];
+	}
+
+	tmp = str_tmp.split(separator);
+
+	for (var i = 0; i < tmp.length; i++) {
+		if (isHertz(tmp[i])) {
+			tmp[i] = " sin(" + tmp[i] + " * 2 * pi * x) ";
+		}
+		res += tmp[i];
+	}
+
+	return res;
+}
+
 function draw_axis() {
 	var y_origin = (canvas.height / 2) + 0.5;
  	var ctx = canvas.getContext("2d");
@@ -119,7 +153,7 @@ function graph_function(f) {
 		y_origin = (canvas.height / 2) + 0.5;
 	
 	if (view == 'simple') {
-		f = "sin(" + f + " * 2 * pi * x)";
+		f = parse_hz_input(f);
 	}
 
 	//var y_factor = 1.0; //y_zoom_fit(f);

@@ -65,7 +65,7 @@ function createAudioElement() {
 
 	var samples, buffer;
 
-	if (view == 'simple') {
+	if (view == 'simple' && isHertz(val)) {
 		samples = sample_audio(val, val);
 	}
 	else {
