@@ -163,6 +163,7 @@ function graph_function(f) {
 
  	ctx.fillStyle = "#E01B5D";
  	ctx.strokeStyle = "#E01B5D";
+	ctx.lineWidth = 1;
 
 	var points = normalize_points(graph_points(f), y_zoom);
 	
