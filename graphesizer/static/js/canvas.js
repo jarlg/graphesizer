@@ -192,19 +192,21 @@ function select_area(x1, x2) {
 	}
 }
 
-// onclick event for canvas, to capture selection
+// onclick event for canvas, to capture selection, and drag
 (function() {
 	canvas.ondblclick = function(e) {
 		if (checkbox.checked) {
 			selection1 = e.pageX;
 			selection2 = null;
-			graph_current_function();
 		}
+		else {
+			x_origin = e.x;
+		}
+		graph_current_function();
 	};
 
 	canvas.onmousedown = function(e) {
 		if (checkbox.checked) {
-			// only care about mouse move while mouse is down
 			canvas.onmousemove = canvas.onmousedown;
 			if (selection1 === null) {
 				selection1 = e.pageX;
@@ -212,8 +214,17 @@ function select_area(x1, x2) {
 			else {
 				selection2 = e.pageX;
 			}
-			graph_current_function();
 		}
+		else {
+			var start = e.pageX;
+			var orig = x_origin;
+			canvas.onmousemove = function(e) {
+				delta = e.pageX - start;
+				x_origin = orig + delta;
+				graph_current_function();
+			}
+		}
+		graph_current_function();
 	};
 
 	canvas.onmouseup = function() {
