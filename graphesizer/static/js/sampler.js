@@ -1,3 +1,6 @@
+// TODO when sampling with sample area, don't extend to DURATION - loop base_audio
+// maybe do this with a threshold, f.ex. loop base_audio when it is acouple of secs long
+
 function mono_to_stereo(input) {
 	var output = []
 	for (var i = 0; i < input.length; i++) {
@@ -7,7 +10,6 @@ function mono_to_stereo(input) {
 	return output;
 }
 
-// TODO fix hz input when multiple freqs are input, parse it or smth
 function sample_audio(f, hz) {
 	var SAMPLES;
 	var audio = [];

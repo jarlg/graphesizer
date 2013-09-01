@@ -21,7 +21,7 @@ function writeAudioControlHTML(view, label, id) {
 
 function writeButton(id) {
 	var container = document.getElementById(id + "-container");
-	container.innerHTML = "<i name='player' id='" + id + "'></i>";
+	container.innerHTML = "<i name='player' id='" + id + "'>play</i>";
 
 	var icon = document.getElementById(id);
 	icon.setAttribute('class', 'icon-play');
