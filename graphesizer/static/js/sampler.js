@@ -81,7 +81,6 @@ function sample_audio(f, hz) {
 		for (var i = 0; i < base_audio.length; i++) {
 			audio.push(base_audio[i%base_audio.length]);
 		}
-		alert(audio.length);
 	}
 
 	// fade ends of audio, to reduce jitter
