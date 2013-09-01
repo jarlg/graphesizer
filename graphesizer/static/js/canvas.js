@@ -247,6 +247,7 @@ function select_area(x1, x2) {
 		if (x_zoom + (event[dy] * factor * Math.log(x_zoom / 5)) > slider.min) {
 			setXZoom(x_zoom + (event[dy] * factor * Math.log(x_zoom / 5)));
 			slider.value = calculate_slider_pos(x_zoom);
+			time.value = calculate_time(x_zoom);
 		}
 	}
 
