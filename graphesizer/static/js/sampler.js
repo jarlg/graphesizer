@@ -70,17 +70,22 @@ function sample_audio(f, hz) {
 	}
 
 	var TOT_SAMPLES = RATE * DURATION;
-	if (base_audio.length < TOT_SAMPLES) {
-		for (var i = 0; i < TOT_SAMPLES; i++) {
-			audio[i] = base_audio[i%base_audio.length];
-		}
+
+	// find factor
+	var fac = 1;
+	while (base_audio.length * fac < TOT_SAMPLES) {
+		fac++;
 	}
-	else {
-		audio = base_audio;
+
+	for (var t = 0; t < fac; t++) {
+		for (var i = 0; i < base_audio.length; i++) {
+			audio.push(base_audio[i%base_audio.length]);
+		}
+		alert(audio.length);
 	}
 
 	// fade ends of audio, to reduce jitter
-	var fade_threshold = 0.05 * RATE;
+	var fade_threshold = 0.005 * RATE;
 	for (var i = 0; i < audio.length; i++) {
 		if (i < fade_threshold) {
 			audio[i] = audio[i] * i / fade_threshold;
