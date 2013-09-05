@@ -52,39 +52,83 @@ function parse_hz_input(str) {
 	return res;
 }
 
+// what am I missing?
+function elem(el, arr) {
+	for (var i = 0; i < arr.length; i++) {
+		if (el == arr[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
 function draw_axis() {
-	var y_origin = (canvas.height / 2) + 0.5;
- 	var ctx = canvas.getContext("2d");
- 	ctx.beginPath();
+	var axis_height = 12,
+	 	offset = 0,
+	 	sections = 5, // 5 sections = 1 section of higher 'base'
+		ms = 1000000; // microseconds
 
- 	// x-axis
- 	ctx.moveTo(0, y_origin);
- 	ctx.lineTo(canvas.width, y_origin);
+	// x_zoom is defined so that it is the number pixels per x (second) of the graph
+	// hence width % x_zoom gives n x seconds shown on screen
+	var xSlider = document.getElementById('x-slider');
 
- 	// y-axis
- 	ctx.moveTo(x_origin, 0);
- 	ctx.lineTo(x_origin, canvas.height);
+	var lowest = calculate_zoom(xSlider.max);
+	var base = width / lowest * ms;
+	
+	base = (base < 100) ? 100 : (base + 100 - (base % 100));
 
- 	// zoom; default 44100px = 1
- 	// unit axis
- 	for (var i = x_origin + x_zoom; i < canvas.width; i += x_zoom) {
- 		ctx.moveTo(i, y_origin - 3);
- 		ctx.lineTo(i, y_origin + 3);
- 	}
+	// roof base - ex. to 200 for this screen
+	// i.e. to nearest 100, 10, thousand or whatever
+	//
+	// draw 5 medium-sized lines (we are rounding up,
+	// so maybe adjust sections variable)
+	// introduce next step of lines as bigger ones;
+	// growing smaller as we zoom out. the 5th line
+	// should be big, belonging to a bigger scale
+	//
+	// the smaller lines should shrink until a scale 
+	// two orders of magnitude bigger is shown, i.e. 50 
+	// lines in total. at any given time, maximum three
+	// scales of lines are shown
+	//
+	// TODO add other scales, down to base and up to ~10secs
+	
+	
+	var steps = [ms / Math.pow(5, 2), ms / 5, ms],
+		cur = (width / x_zoom) * ms,
+		start = (-1 * x_origin * ms / x_zoom),
+		end = start + (width * ms / x_zoom),
+		painted = [],
+		n_ms,
+		n_lines,
+		first,
+		x;
 
- 	// y-axis over x-axis
- 	for (var i = y_origin - y_zoom; i > 0; i -= y_zoom) {
- 		ctx.moveTo(x_origin - 3, i);
- 		ctx.lineTo(x_origin + 3, i);
- 	}
- 	for (var i = y_origin + y_zoom; i < canvas.height; i += y_zoom) {
- 		ctx.moveTo(x_origin - 3, i);
- 		ctx.lineTo(x_origin + 3, i);
- 	}
-
- 	ctx.closePath();
  	ctx.strokeStyle = "#000";
- 	ctx.stroke();
+	ctx.lineWidth = 1;
+
+	for (var s = steps.length - 1; s >= 0; s--) {
+		first = (start == 0) ? 0 : Math.round(start / steps[s] + 0.5);
+		first_x = first * steps[s] * x_zoom / ms + x_origin;
+
+		n_lines = Math.floor((width - first_x) / (steps[s] * x_zoom / ms)) + 1;
+
+		for (var i = 0; i < n_lines; i++) {
+			n_ms = (first + i) * steps[s];
+			x = n_ms * x_zoom / ms + x_origin;
+	
+			if (elem(n_ms, painted)) {
+				continue;
+			}
+
+			ctx.beginPath();
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, axis_height * (s + 1));
+			ctx.stroke();
+
+			painted.push(n_ms);
+		}
+	}
 }
 
 function normalize_points(p, n) {
@@ -161,13 +205,13 @@ function graph_function(f) {
 	// clear canvas
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
- 	ctx.fillStyle = "#E01B5D";
  	ctx.strokeStyle = "#E01B5D";
 	ctx.lineWidth = 1;
 
 	var points = normalize_points(graph_points(f), y_zoom);
 	
 	draw_points(points, y_origin);
+	draw_axis();
 
 	if (selection1 !== null || selection2 !== null) {
 		select_area(selection1, selection2);
@@ -279,8 +323,6 @@ function select_area(x1, x2) {
 
 	var ySlider = document.getElementById('y-slider');
 	var xSlider = document.getElementById('x-slider');
-	xSlider.setAttribute('value', 112);
-	xSlider.setAttribute('max', width + 20);
 
 	function redraw(v) {
 		setXZoom(calculate_zoom(v));

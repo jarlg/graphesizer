@@ -32,6 +32,13 @@ catch (e) {
 	canvas.setAttribute('height', cHeight+'%');
 })();
 
+(function() {
+	var ySlider = document.getElementById('y-slider');
+	var xSlider = document.getElementById('x-slider');
+	xSlider.setAttribute('value', 112);
+	xSlider.setAttribute('max', width + 20);
+})();
+
 function getInputValue() {
 	if (view == 'simple') {
 		return document.getElementById('hertz').value;
