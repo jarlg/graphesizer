@@ -94,26 +94,41 @@ function draw_axis() {
 	// TODO add other scales, down to base and up to ~10secs
 	
 	
-	var steps = [ms / Math.pow(5, 2), ms / 5, ms],
+	var steps = [ms * 10, ms, ms / 5, ms / 10],
 		cur = (width / x_zoom) * ms,
 		start = (-1 * x_origin * ms / x_zoom),
 		end = start + (width * ms / x_zoom),
-		painted = [],
-		n_ms,
-		n_lines,
-		first,
-		x;
+		painted = [];
+
+	// populate steps
+		//var i = 1;
+		//while (ms / Math.pow(5, i) > base / 100) {
+		//	steps.push(ms / Math.pow(5, i));
+		//	++i;
+		//}
+
+	function n_lines(step) {
+		first = (start == 0) ? 0 : Math.round(start / step + 0.5);
+		first_x = first * step * x_zoom / ms + x_origin;
+		return Math.floor((width - first_x) / (step * x_zoom / ms)) + 1;
+	}
+
+	//// get index of first lines we draw
+	//var start_index = steps.length - 1;
+	//for (var i = steps.length - 1; i >= 0; i--) {
+	//	if (n_lines(steps[i]) <= 110) {
+	//		start_index = i;
+	//		break;
+	//	}
+	//}
 
  	ctx.strokeStyle = "#000";
 	ctx.lineWidth = 1;
 
-	for (var s = steps.length - 1; s >= 0; s--) {
-		first = (start == 0) ? 0 : Math.round(start / steps[s] + 0.5);
-		first_x = first * steps[s] * x_zoom / ms + x_origin;
+	var start_index = 3;
 
-		n_lines = Math.floor((width - first_x) / (steps[s] * x_zoom / ms)) + 1;
-
-		for (var i = 0; i < n_lines; i++) {
+	for (var s = start_index - 3; s <= start_index; s++) {
+		for (var i = 0; i < n_lines(steps[s]); i++) {
 			n_ms = (first + i) * steps[s];
 			x = n_ms * x_zoom / ms + x_origin;
 	
@@ -123,12 +138,13 @@ function draw_axis() {
 
 			ctx.beginPath();
 			ctx.moveTo(x, 0);
-			ctx.lineTo(x, axis_height * (s + 1));
+			ctx.lineTo(x, axis_height * abs(s - start_index));
 			ctx.stroke();
 
 			painted.push(n_ms);
 		}
 	}
+
 }
 
 function normalize_points(p, n) {
