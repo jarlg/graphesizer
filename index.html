@@ -3,8 +3,8 @@
 <head>
 	<title>Graphesizer :: a mathematical approach to sound</title>
 
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/avgrund.css') }}" />
+	<link rel="stylesheet" href="static/css/base.css" />
+	<link rel="stylesheet" href="static/css/avgrund.css" />
 	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
 	<link rel="author" href="humans.txt" />
 </head>
@@ -27,7 +27,7 @@
 			<b>You are currently seeing:</b> <output id="time"></output>s sound<br><br> 
 			<b>Adjust amplitude:</b><br> 
 			<input type="range" id="y-slider" class="slider" min="10" max="240" step="2" class="y_zoom" value="150" />
-			<output id="contval"></output>
+			<output id="test-disp"></output>
 		</div>
 
 		<div id="mCol" class="col">
@@ -40,7 +40,7 @@
 				</div>
 
 				<div id="adv">
-					<p><b><i>f </i>(<i>x</i>):</b> <input type="text" id="signal" name="signal" value="{{ signal }}" />
+					<p><b><i>f </i>(<i>x</i>):</b> <input type="text" id="signal" name="signal" value="sin(220*2*pi*x)" />
 					Use sample area: <input type="checkbox" id="sample-checkbox" /></p>
 				</div>
 
@@ -57,13 +57,13 @@
 
 	<div class="avgrund-cover"></div>
 
-	<script type="text/javascript" src="{{ url_for('static', filename='js/avgrund.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/load.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/convert-to-math.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/zoom.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/canvas.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/sampler.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/wave.js') }}"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='js/play_audio.js') }}"></script>
+	<script type="text/javascript" src="static/js/avgrund.js"></script>
+	<script type="text/javascript" src="static/js/load.js"></script>
+	<script type="text/javascript" src="static/js/convert-to-math.js"></script>
+	<script type="text/javascript" src="static/js/zoom.js"></script>
+	<script type="text/javascript" src="static/js/canvas.js"></script>
+	<script type="text/javascript" src="static/js/sampler.js"></script>
+	<script type="text/javascript" src="static/js/wave.js"></script>
+	<script type="text/javascript" src="static/js/play_audio.js"></script>
 </body>
 </html>
