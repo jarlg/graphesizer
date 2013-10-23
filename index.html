@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Graphesizer :: a mathematical approach to sound</title>
+
+	<link rel="stylesheet" href="static/css/base.css" />
+	<link rel="stylesheet" href="static/css/avgrund.css" />
+	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+	<link rel="author" href="humans.txt" />
+</head>
+<body>
+	<aside id="not-supported" class="avgrund-popup">
+		<h2>Hmm? Web Audio API?</h2>
+		<br \>
+
+		<p>It seems your browser doesn't support the Web Audio API.</p> 
+		<p>We suggest using a recent version of <b>Chromium</b>, or <b>Firefox version 24</b> and higher.</p>
+
+		<button class="avgrund-hide">I'll just use the graph.</button>
+	</aside>
+
+	<div class="avgrund-contents">
+	<canvas id="graph" class="graph"></canvas>
+		<div id="x"><input type="range" id="x-slider" min="20" step="1" class="x_zoom" /></div>
+
+		<div id="lCol" class="col">
+			<b>You are currently seeing:</b> <output id="time"></output>s sound<br><br> 
+			<b>Adjust amplitude:</b><br> 
+			<input type="range" id="y-slider" class="slider" min="10" max="240" step="2" class="y_zoom" value="150" />
+			<output id="test-disp"></output>
+		</div>
+
+		<div id="mCol" class="col">
+			<div id="inputs">
+				<p id="toggle"><a id='simple_toggle' href="#simple">simple</a> | <a id='advanced_toggle' href="#advanced">advanced</a></p>
+				<div id="simple"></div>
+				<div id="advanced"></div>
+				<div id="smpl">
+					<p><b>Frequency: <input type="text" id="hertz" name="hertz" value=368 />Hz</b></p>
+				</div>
+
+				<div id="adv">
+					<p><b><i>f </i>(<i>x</i>):</b> <input type="text" id="signal" name="signal" value="sin(220*2*pi*x)" />
+					Use sample area: <input type="checkbox" id="sample-checkbox" /></p>
+				</div>
+
+				<input id="submit" type="submit" class="button" value="Generate" />
+			</div>
+		</div>
+
+		<div id="rCol" class="col">
+			<b>Your sounds:</b>
+			<ul id="sounds"></ul>
+		</div>
+	</div>
+	
+
+	<div class="avgrund-cover"></div>
+
+	<script type="text/javascript" src="static/js/avgrund.js"></script>
+	<script type="text/javascript" src="static/js/load.js"></script>
+	<script type="text/javascript" src="static/js/convert-to-math.js"></script>
+	<script type="text/javascript" src="static/js/zoom.js"></script>
+	<script type="text/javascript" src="static/js/canvas.js"></script>
+	<script type="text/javascript" src="static/js/sampler.js"></script>
+	<script type="text/javascript" src="static/js/wave.js"></script>
+	<script type="text/javascript" src="static/js/play_audio.js"></script>
+</body>
+</html>
