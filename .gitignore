@@ -1,6 +1,1 @@
-*.pyc
-*.wav
-*.ogg
 *.swp
-venv/
-config.py
