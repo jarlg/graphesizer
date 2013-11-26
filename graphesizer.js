@@ -30,6 +30,8 @@ function Graphesizer(canvas) {
             this.color = color;
             this.phase = 0;
             this.prev_phase = 0;
+            this.amplitude = 1;
+            this.prev_amplitude = 0;
         },
 
         // -> [Amplitude]
@@ -39,7 +41,7 @@ function Graphesizer(canvas) {
              */
             this.data = [];
             for (var x = 0; x < duration; x += rate) {
-                this.data.push(Math.sin(2 * Math.PI * this.frequency * x + this.phase));
+                this.data.push(this.amplitude * Math.sin(2 * Math.PI * this.frequency * x + this.phase));
             }
 
             return this;
@@ -50,17 +52,19 @@ function Graphesizer(canvas) {
          * takes a context, signal :: [Amplitude], 
          * number of elements to draw and color
          */
-        draw: function (length) {
+        draw: function (length, amp_ratio) {
             var context = this.context;
             var origo = context.canvas.height / 2;
-            var amp_ratio = origo * 1 / 3;
 
             context.beginPath();
             context.strokeStyle = this.color;
             context.moveTo(0, origo);
+
+            var y;
             for (var i = 1; i < length; i++) {
-                context.lineTo(i, origo + (this.data[i] * amp_ratio));
-                context.moveTo(i, origo + (this.data[i] * amp_ratio));
+                y = origo + this.data[i] * origo * amp_ratio;
+                context.lineTo(i, y);
+                context.moveTo(i, y);
             }
             context.stroke();
 
@@ -125,6 +129,11 @@ function Graphesizer(canvas) {
         options: {
             addButtonColor: "#657b83",
             addButtonHoverColor: "#002b36",
+
+            /* signal of amplitude 1 goes 1/3 of the way from
+             * x-axis to top of screen
+             */
+            amplitude_ratio:  1 / 3,
 
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
@@ -192,10 +201,21 @@ function Graphesizer(canvas) {
 
             if (this.states.dragging) {
                 var signal = this.signals[this.states.selectedSignal];
+
+                // x - dephase
                 var delta = (x - this.states.dragXOrigin);
                 signal.phase = signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1;
                 signal.sample(1 / this.states.zoom, // rate
                         this.width / this.states.zoom); //duration
+
+                // y - amplify
+                delta = (y - this.states.dragYOrigin);
+                signal.amplitude = signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio);
+
+                if (signal.amplitude <= 0) {
+                    this.signals.splice(this.states.selectedSignal, 1);
+                    this.states.selectedSignal = -1;
+                }
                 this.draw();
             }
 
@@ -209,8 +229,10 @@ function Graphesizer(canvas) {
             if (!this.states.addButtonHover) {
                 this.states.dragging = true;
                 this.states.dragXOrigin = x;
+                this.states.dragYOrigin = y;
                 var signal = this.signals[this.states.selectedSignal];
                 signal.prev_phase = signal.phase;
+                signal.prev_amplitude = signal.amplitude;
             }
 
             return this;
@@ -232,7 +254,7 @@ function Graphesizer(canvas) {
                     signal.sample(1 / this.states.zoom, //rate
                                   this.width / this.states.zoom);
 
-                    signal.draw(this.width);
+                    signal.draw(this.width, this.options.amplitude_ratio);
                 }
             }
 
@@ -249,7 +271,7 @@ function Graphesizer(canvas) {
             this.clear();
 
             for (var i = 0; i < this.signals.length; i++) {
-                this.signals[i].draw(this.width);
+                this.signals[i].draw(this.width, this.options.amplitude_ratio);
             }
 
             this.addButton.draw(this.options.addButtonColor);
