@@ -18,24 +18,63 @@ function Graphesizer(canvas) {
         return false;
     }
 
+    /* -> float distance
+     * returns distance between two points
+     * using simple pythagoras d = sqrt(abs(x2-x1)**2 + abs(y2-y1)**2)
+     */
+    function getDistance(x1, y1, x2, y2) {
+        return Math.sqrt(Math.pow(Math.abs(x2 - x1), 2) + Math.pow(Math.abs(y2 - y1), 2));
+    }
+
+    /* -> { 1, -1 }
+     * return 1 for growing (towards right)
+     * return -1 for decreasing (towards right)
+     */
+    function getDirection(signal, x) {
+        if ((x >= 0) && (x < signal.curve.length - 1)) {
+            return (signal[x] < signal[x+1]) ? 1 : -1;
+        }
+        else if (x == signal.curve.length - 1) {
+            return (signal[x] > signal[x-1]) ? 1 : -1;
+        }
+        console.log('error in calculation of signal\'s direction in x = ' + x);
+        return 0;
+    }
+
     /* -> float distance to curve
      * takes positions x, y and [amplitude]
      */
     function distanceToCurve(x, y, signal) {
-        /* we should have some smart search method 
-         * TODO:
-         * to find closest point on curve
-         * we know the derrivative is zero in this point,
-         * the line connecting the point to the curve is
-         * orthogonal to the tangent in the intersection
-         */
+        var direction = getDirection(signal, x),
+            distance = getDistance(x, signal.curve[x], x, y),
+            next_distance = distance,
+            closest_x,
+            i = 1;
+
+        if (signal[x] == y) {
+            return 0; 
+        }
+        else if (signal[x] > y) {
+            direction = -direction;
+        }
+
+        do {
+            distance = next_distance;
+            next_distance = getDistance(x + direction*i,
+                    signal.curve[x+direction*i],
+                    x,
+                    y);
+            i++;
+        } while(distance > next_distance);
+
+        return distance;
     }
 
     /* -> int (index of closest signal)
      * takes position of click, list of signals
      */
     function getClosest(x, y, signals) {
-        var distance = 0,
+        var distance = 100, // magic number
             index = 0,
             tmp = 0;
 
@@ -72,30 +111,34 @@ function Graphesizer(canvas) {
             /*
              * TODO: forget to clear canvas makes for interesting effects
              */
-            this.data = [];
+            this.audio = [];
             for (var x = 0; x < duration; x += rate) {
-                this.data.push(this.amplitude * Math.sin(2 * Math.PI * this.frequency * x + this.phase));
+                this.audio.push(this.amplitude * Math.sin(2 * Math.PI * this.frequency * x + this.phase));
             }
 
             return this;
         },
 
+        render: function (length, amp_ratio) {
+            var origo = this.context.canvas.height / 2;
+            this.curve = [];
+            for (var x = 0; x < length; ++x) {
+                this.curve.push(origo + this.audio[x] * origo * amp_ratio);
+            }
 
-        /* -> void 
-         * takes a context, signal :: [Amplitude], 
-         * number of elements to draw and color
-         */
-        draw: function (length, amp_ratio) {
+            return this;
+        },
+
+        draw: function () {
             var context = this.context;
-            var origo = context.canvas.height / 2;
 
             context.beginPath();
             context.strokeStyle = this.color;
-            context.moveTo(0, origo);
+            context.moveTo(0, this.curve[0]);
 
             var y;
-            for (var i = 1; i < length; i++) {
-                y = origo + this.data[i] * origo * amp_ratio;
+            for (var i = 1; i < this.curve.length; i++) {
+                y = this.curve[i];
                 context.lineTo(i, y);
                 context.moveTo(i, y);
             }
@@ -263,6 +306,9 @@ function Graphesizer(canvas) {
                 this.states.dragging = true;
                 this.states.dragXOrigin = x;
                 this.states.dragYOrigin = y;
+
+                this.states.selectedSignal = getClosest(x, y, this.signals);
+                
                 var signal = this.signals[this.states.selectedSignal];
                 signal.prev_phase = signal.phase;
                 signal.prev_amplitude = signal.amplitude;
@@ -287,7 +333,8 @@ function Graphesizer(canvas) {
                     signal.sample(1 / this.states.zoom, //rate
                                   this.width / this.states.zoom);
 
-                    signal.draw(this.width, this.options.amplitude_ratio);
+                    signal.render(this.width, this.options.amplitude_ratio)
+                        .draw();
                 }
             }
 
@@ -304,7 +351,8 @@ function Graphesizer(canvas) {
             this.clear();
 
             for (var i = 0; i < this.signals.length; i++) {
-                this.signals[i].draw(this.width, this.options.amplitude_ratio);
+                this.signals[i].render(this.width, this.options.amplitude_ratio)
+                    .draw();
             }
 
             this.addButton.draw(this.options.addButtonColor);
