@@ -18,6 +18,39 @@ function Graphesizer(canvas) {
         return false;
     }
 
+    /* -> float distance to curve
+     * takes positions x, y and [amplitude]
+     */
+    function distanceToCurve(x, y, signal) {
+        /* we should have some smart search method 
+         * TODO:
+         * to find closest point on curve
+         * we know the derrivative is zero in this point,
+         * the line connecting the point to the curve is
+         * orthogonal to the tangent in the intersection
+         */
+    }
+
+    /* -> int (index of closest signal)
+     * takes position of click, list of signals
+     */
+    function getClosest(x, y, signals) {
+        var distance = 0,
+            index = 0,
+            tmp = 0;
+
+        for (var i = 0; i < signals.length; i++) {
+            tmp = distanceToCurve(x, y, signals[i]);
+            if (tmp < distance) {
+                distance = tmp;
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
+
     function Signal(context, frequency, color) {
         'use strict';
         return this.init(context, frequency, color);
