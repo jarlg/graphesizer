@@ -89,11 +89,39 @@ function Graphesizer(canvas) {
         return index;
     }
 
+    /* -> int (index of color)
+     * takes all signals, list of colors and chooses next color
+     * if we delete the first wave after having created the second,
+     * we want the next created wave to have the color the first wave
+     * had.
+     */
+    function chooseColor(colors, signals) {
+        var in_use = false;
+        for (var i = 0; i < signals.length; i++) {
+            for (var j = 0; j < signals.length; j++) {
+                if (signals[j].color == colors[i]) {
+                    in_use = true;
+                    break;
+                }
+            }
+
+            if (in_use) {
+                in_use = false;
+            }
+            else {
+                return i;
+            }
+        }
+
+        return signals.length;
+    }
+
 
     function Signal(context, frequency, color) {
         'use strict';
         return this.init(context, frequency, color);
     }
+
 
     Signal.prototype = {
         init: function (context, frequency, color) {
@@ -194,6 +222,23 @@ function Graphesizer(canvas) {
             return hover(x, y, this.x, this.width, this.fuzzy);
         }
     }
+
+
+    /* wave expression on bottom of screen
+     * can modify frequencies of waves,
+     * modify "mode" as in [add/multiply/divide]
+     */
+    function WaveExpression(context, x, y, fontsize, spacing) {
+        'use strict';
+        return this.init(context, x, y, fontsize, spacing);
+    }
+
+    WaveExpression.prototype = {
+        init: function (context, x, y, fontsize, spacing) {
+            
+        }
+    }
+
 
     /* Graphesizer object takes care of the canvas:
      * drawing signals,
@@ -323,8 +368,10 @@ function Graphesizer(canvas) {
 
             if (!this.states.dragging) {
                 if (this.states.addButtonHover) {
-                    var index = this.signals.length;
-                    var color = this.options.colors[index % this.options.colors.length];
+                    var colorIndex = chooseColor(this.options.colors,
+                                                 this.signals);
+                    var color = this.options.colors[colorIndex];
+
                     var signal = new Signal(this.context,
                                         this.options.defaultSignal,
                                         color);
