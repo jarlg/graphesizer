@@ -1,4 +1,4 @@
-function Graphesizer(canvas) {
+eventfunction Graphesizer(canvas) {
     'use strict';
     return this.init(canvas);
 }
@@ -318,9 +318,10 @@ function Graphesizer(canvas) {
             this.waveExpression = new WaveExpression(this.context, 0,0,0,0);
 
             var self = this;
-            canvas.addEventListener('mousemove', function (pos) { self.update(pos) }, false);
-            canvas.addEventListener('mousedown', function (pos) { self.onmousedown(pos) }, false);
-            canvas.addEventListener('mouseup', function (pos) { self.onmouseup(pos) }, false);
+            canvas.addEventListener('mousemove', function (event) { self.update(event) }, false);
+            canvas.addEventListener('mousedown', function (event) { self.onmousedown(event) }, false);
+            canvas.addEventListener('mouseup', function (event) { self.onmouseup(event) }, false);
+            canvas.addEventListener('scroll', function (event) { self.onscroll(event) }, false);
         },
 
         clear: function () {
@@ -333,9 +334,9 @@ function Graphesizer(canvas) {
          * mouseovers,
          * all input
          */
-        update: function (pos) {
-            var x = pos.clientX,
-            y = pos.clientY;
+        update: function (event) {
+            var x = event.clientX,
+                y = event.clientY;
 
             if (this.addButton.hover(x, y)) {
                 if (!this.states.addButtonHover) {
@@ -377,18 +378,20 @@ function Graphesizer(canvas) {
             return this;
         },
 
-        onmousedown: function (pos) {
-            var x = pos.clientX,
-                y = pos.clientY;
+        onmousedown: function (event) {
+            var x = event.clientX,
+                y = event.clientY;
 
             if (!this.states.addButtonHover) {
                 this.states.dragging = true;
                 this.states.dragXOrigin = x;
                 this.states.dragYOrigin = y;
+                this.signals[this.states.selectedSignal].stroke_width = 1; // normal stroke width
 
                 this.states.selectedSignal = getClosest(x, y, this.signals);
-                
+
                 var signal = this.signals[this.states.selectedSignal];
+                signal.stroke_width = 3; // selected signal stroke width
                 signal.prev_phase = signal.phase;
                 signal.prev_amplitude = signal.amplitude;
             }
@@ -396,9 +399,9 @@ function Graphesizer(canvas) {
             return this;
         },
 
-        onmouseup: function (pos) {
-            var x = pos.clientX,
-                y = pos.clientY;
+        onmouseup: function (event) {
+            var x = event.clientX,
+                y = event.clientY;
 
             if (!this.states.dragging) {
                 if (this.states.addButtonHover) {
@@ -426,6 +429,15 @@ function Graphesizer(canvas) {
             this.states.dragging = false;
         },
 
+        onscroll: function (event) {
+            var offset = event.pageXOffset,
+                signal = this.signals[this.states.selectedSignal];
+
+            signal.frequency -= offset;
+            signal.sample();
+            this.draw();
+        },
+
         add: function (signal) {
             this.signals.push(signal);
             this.waveExpression.add(signal);
@@ -439,7 +451,6 @@ function Graphesizer(canvas) {
         sample: function () {
             var sum = 0;
             this.audio = [];
-            console.log(this.signals.length);
             for (var i = 0; i < this.width; i++) {
                 for (var j = 0; j < this.signals.length; j++) {
                     // only plus so far
@@ -459,7 +470,7 @@ function Graphesizer(canvas) {
         },
 
         drawExpression: function () {
-            drawCurve(this.context, this.curve, this.options.colors[7], 4); // 5 is stroke width, 8 is a good color
+            drawCurve(this.context, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
             return this;
         },
 
