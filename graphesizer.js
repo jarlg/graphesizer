@@ -455,7 +455,7 @@ function Graphesizer(canvas) {
         },
 
         drawExpression: function () {
-            drawCurve(this.context, this.curve, this.options.colors[7], 5); // 5 is stroke width, 8 is a good color
+            drawCurve(this.context, this.curve, this.options.colors[7], 4); // 5 is stroke width, 8 is a good color
             return this;
         },
 
