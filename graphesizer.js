@@ -7,12 +7,16 @@ function Graphesizer(canvas) {
     'use strict';
 
     /* -> bool
-     * takes two points, a margin and a size (symmtry) a fuzziness
+     * takes two points (click position),
+     * and then basically a rectangle: x,y, width, height
      * returns if the two points are within the object
+     * fuzzy is the margin/fuzzyness of the hover
      */
-    function hover(x, y, margin, size, fuzzy) {
-        if ((x > margin - fuzzy && x < margin + fuzzy + size) &&
-            (y > margin - fuzzy && y < margin + fuzzy + size)) {
+    function hover(x, y, x1, y1, width, height, fuzzy) {
+        var deltaX = x - x1,
+            deltaY = y - y1;
+        if (deltaX > -fuzzy && deltaX < width + fuzzy &&
+            deltaY > -fuzzy && deltaY < height + fuzzy) {
                 return true;
             }
         return false;
@@ -219,7 +223,7 @@ function Graphesizer(canvas) {
          * checks if two coordinates are over the button
          */
         hover: function (x, y) {
-            return hover(x, y, this.x, this.width, this.fuzzy);
+            return hover(x, y, this.x, this.x, this.width, this.height, this.fuzzy);
         }
     }
 
