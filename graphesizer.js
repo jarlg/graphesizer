@@ -279,6 +279,8 @@ function Graphesizer(canvas) {
             amplitude_ratio:  1 / 3,
             stroke_width: 1,
 
+            drawExpression: false,
+
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
                      "#6c71c4", "#268bd2", "#2aa198",
@@ -451,7 +453,9 @@ function Graphesizer(canvas) {
         },
 
         render: function () {
-            return renderSignal(this, this.width, this.options.amplitude_ratio);
+            if (this.options.drawExpression) {
+                return renderSignal(this, this.width, this.options.amplitude_ratio);
+            }
         },
 
         drawExpression: function () {
@@ -462,8 +466,10 @@ function Graphesizer(canvas) {
         draw: function () {
             this.clear();
 
-            this.render()
-                .drawExpression();
+            if (this.options.drawExpression) {
+                this.render()
+                    .drawExpression();
+            }
 
             for (var i = 0; i < this.signals.length; i++) {
                 this.signals[i].render(this.width, this.options.amplitude_ratio)
