@@ -1,4 +1,4 @@
-eventfunction Graphesizer(canvas) {
+function Graphesizer(canvas) {
     'use strict';
     return this.init(canvas);
 }
@@ -279,7 +279,7 @@ eventfunction Graphesizer(canvas) {
             amplitude_ratio:  1 / 3,
             stroke_width: 1,
 
-            drawExpression: false,
+            drawExpression: true,
 
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
@@ -321,7 +321,7 @@ eventfunction Graphesizer(canvas) {
             canvas.addEventListener('mousemove', function (event) { self.update(event) }, false);
             canvas.addEventListener('mousedown', function (event) { self.onmousedown(event) }, false);
             canvas.addEventListener('mouseup', function (event) { self.onmouseup(event) }, false);
-            canvas.addEventListener('scroll', function (event) { self.onscroll(event) }, false);
+            canvas.addEventListener('mousewheel', function (event) { self.onmousewheel(event) }, false);
         },
 
         clear: function () {
@@ -371,7 +371,6 @@ eventfunction Graphesizer(canvas) {
                 signal.sample(1 / this.states.zoom, // rate
                         this.width / this.states.zoom); //duration
 
-                this.sample();
                 this.draw();
             }
 
@@ -419,9 +418,6 @@ eventfunction Graphesizer(canvas) {
                                   this.width / this.states.zoom)
                         .render();
 
-                    this.sample()
-                        .render();
-
                     this.draw();
                 }
             }
@@ -429,12 +425,18 @@ eventfunction Graphesizer(canvas) {
             this.states.dragging = false;
         },
 
-        onscroll: function (event) {
-            var offset = event.pageXOffset,
+        onmousewheel: function (event) {
+            event.preventDefault();
+
+            var delta = event.wheelDeltaY,
                 signal = this.signals[this.states.selectedSignal];
 
-            signal.frequency -= offset;
-            signal.sample();
+            signal.frequency += delta;
+            console.log(signal.frequency);
+            signal.sample(1 / this.states.zoom,
+                          this.width / this.states.zoom);
+
+            console.log(signal.frequency);
             this.draw();
         },
 
@@ -478,7 +480,8 @@ eventfunction Graphesizer(canvas) {
             this.clear();
 
             if (this.options.drawExpression) {
-                this.render()
+                this.sample()
+                    .render()
                     .drawExpression();
             }
 
