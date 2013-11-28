@@ -133,6 +133,7 @@ function Graphesizer(canvas) {
             this.frequency = frequency;
             this.color = color;
             this.phase = 0;
+            this.mode = '+'; // possible modes: +, -, / and *
             this.prev_phase = 0;
             this.amplitude = 1;
             this.prev_amplitude = 0;
@@ -238,8 +239,13 @@ function Graphesizer(canvas) {
     }
 
     WaveExpression.prototype = {
-        init: function (context, x, y, fontsize, spacing) {
-            
+        init: function (context, x, y, fontsize, spacing, stroke_width) {
+            this.signals = [];
+            this.stroke_width = stroke_width;
+        },
+
+        add: function (signal) {
+            this.signals.push(signal);
         }
     }
 
@@ -290,6 +296,8 @@ function Graphesizer(canvas) {
             this.signals = [];
             this.addButton = new AddButton(this.context, 30, 30, 40, 40, 10);
             this.addButton.draw(this.options.addButtonColor);
+
+            this.waveExpression = new WaveExpression(this.context, 0,0,0,0);
 
             var self = this;
             canvas.addEventListener('mousemove', function (pos) { self.update(pos) }, false);
@@ -394,6 +402,7 @@ function Graphesizer(canvas) {
 
         add: function (signal) {
             this.signals.push(signal);
+            this.waveExpression.add(signal);
 
             return this;
         },
