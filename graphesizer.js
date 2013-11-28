@@ -22,6 +22,45 @@ function Graphesizer(canvas) {
         return false;
     }
 
+    // -> [Amplitude]
+    function sampleSignal(signal, rate, duration) {
+        /*
+         * TODO: forget to clear canvas makes for interesting effects
+         */
+        signal.audio = [];
+        for (var x = 0; x < duration; x += rate) {
+            signal.audio.push(signal.amplitude * Math.sin(2 * Math.PI * signal.frequency * x + signal.phase));
+        }
+
+        return signal;
+    }
+
+    /* creates a curve based on already sampled audio
+     */
+    function renderSignal(signal, length, amp_ratio) {
+        var origo = signal.context.canvas.height / 2;
+        signal.curve = [];
+        for (var x = 0; x < length; ++x) {
+            signal.curve.push(origo + signal.audio[x] * origo * amp_ratio);
+        }
+        return signal;
+    }
+
+    function drawCurve(context, curve, color, stroke_width) {
+        context.beginPath();
+        context.strokeStyle = color;
+        context.lineWidth = stroke_width;
+        context.moveTo(0, curve[0]);
+
+        var y;
+        for (var i = 1; i < curve.length; i++) {
+            y = curve[i];
+            context.lineTo(i, y);
+            context.moveTo(i, y);
+        }
+        context.stroke();
+    }
+
     /* -> float distance
      * returns distance between two points
      * using simple pythagoras d = sqrt(abs(x2-x1)**2 + abs(y2-y1)**2)
@@ -121,17 +160,18 @@ function Graphesizer(canvas) {
     }
 
 
-    function Signal(context, frequency, color) {
+    function Signal(context, frequency, color, stroke_width) {
         'use strict';
-        return this.init(context, frequency, color);
+        return this.init(context, frequency, color, stroke_width);
     }
 
 
     Signal.prototype = {
-        init: function (context, frequency, color) {
+        init: function (context, frequency, color, stroke_width) {
             this.context = context;
             this.frequency = frequency;
             this.color = color;
+            this.stroke_width = stroke_width;
             this.phase = 0;
             this.mode = '+'; // possible modes: +, -, / and *
             this.prev_phase = 0;
@@ -139,44 +179,16 @@ function Graphesizer(canvas) {
             this.prev_amplitude = 0;
         },
 
-        // -> [Amplitude]
         sample: function (rate, duration) {
-            /*
-             * TODO: forget to clear canvas makes for interesting effects
-             */
-            this.audio = [];
-            for (var x = 0; x < duration; x += rate) {
-                this.audio.push(this.amplitude * Math.sin(2 * Math.PI * this.frequency * x + this.phase));
-            }
-
-            return this;
+            return sampleSignal(this, rate, duration);
         },
 
         render: function (length, amp_ratio) {
-            var origo = this.context.canvas.height / 2;
-            this.curve = [];
-            for (var x = 0; x < length; ++x) {
-                this.curve.push(origo + this.audio[x] * origo * amp_ratio);
-            }
-
-            return this;
+            return renderSignal(this, length, amp_ratio);
         },
 
         draw: function () {
-            var context = this.context;
-
-            context.beginPath();
-            context.strokeStyle = this.color;
-            context.moveTo(0, this.curve[0]);
-
-            var y;
-            for (var i = 1; i < this.curve.length; i++) {
-                y = this.curve[i];
-                context.lineTo(i, y);
-                context.moveTo(i, y);
-            }
-            context.stroke();
-
+            drawCurve(this.context, this.curve, this.color, this.stroke_width);
             return this;
         }
     }
@@ -265,6 +277,7 @@ function Graphesizer(canvas) {
              * x-axis to top of screen
              */
             amplitude_ratio:  1 / 3,
+            stroke_width: 1,
 
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
@@ -294,6 +307,9 @@ function Graphesizer(canvas) {
             this.states.zoom = this.width * 80; // 80 is aesthetically pleasing on chromebook
 
             this.signals = [];
+            this.audio = [];
+            this.curve = [];
+
             this.addButton = new AddButton(this.context, 30, 30, 40, 40, 10);
             this.addButton.draw(this.options.addButtonColor);
 
@@ -338,8 +354,6 @@ function Graphesizer(canvas) {
                 // x - dephase
                 var delta = (x - this.states.dragXOrigin);
                 signal.phase = signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1;
-                signal.sample(1 / this.states.zoom, // rate
-                        this.width / this.states.zoom); //duration
 
                 // y - amplify
                 delta = (y - this.states.dragYOrigin);
@@ -349,6 +363,12 @@ function Graphesizer(canvas) {
                     this.signals.splice(this.states.selectedSignal, 1);
                     this.states.selectedSignal = -1;
                 }
+
+                // sample
+                signal.sample(1 / this.states.zoom, // rate
+                        this.width / this.states.zoom); //duration
+
+                this.sample();
                 this.draw();
             }
 
@@ -386,14 +406,18 @@ function Graphesizer(canvas) {
 
                     var signal = new Signal(this.context,
                                         this.options.defaultSignal,
-                                        color);
+                                        color,
+                                        this.options.stroke_width);
                     this.add(signal);
 
                     signal.sample(1 / this.states.zoom, //rate
-                                  this.width / this.states.zoom);
+                                  this.width / this.states.zoom)
+                        .render();
 
-                    signal.render(this.width, this.options.amplitude_ratio)
-                        .draw();
+                    this.sample()
+                        .render();
+
+                    this.draw();
                 }
             }
 
@@ -407,15 +431,45 @@ function Graphesizer(canvas) {
             return this;
         },
 
+        /* generates a total wave expression from all signals,
+         * based on their modes of interference
+         */
+        sample: function () {
+            var sum = 0;
+            this.audio = [];
+            console.log(this.signals.length);
+            for (var i = 0; i < this.width; i++) {
+                for (var j = 0; j < this.signals.length; j++) {
+                    // only plus so far
+                    sum += this.signals[j].audio[i];
+                }
+                this.audio.push(sum);
+                sum = 0;
+            }
+
+            return this;
+        },
+
+        render: function () {
+            return renderSignal(this, this.width, this.options.amplitude_ratio);
+        },
+
+        drawExpression: function () {
+            drawCurve(this.context, this.curve, this.options.colors[7], 5); // 5 is stroke width, 8 is a good color
+            return this;
+        },
+
         draw: function () {
             this.clear();
+
+            this.render()
+                .drawExpression();
 
             for (var i = 0; i < this.signals.length; i++) {
                 this.signals[i].render(this.width, this.options.amplitude_ratio)
                     .draw();
             }
-
             this.addButton.draw(this.options.addButtonColor);
-        }
+        },
     }
 })(window, document);
