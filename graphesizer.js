@@ -116,8 +116,8 @@ function Graphesizer(canvas) {
     /* -> int (index of closest signal)
      * takes position of click, list of signals
      */
-    function getClosest(x, y, signals) {
-        var distance = 100, // magic number
+    function getClosest(x, y, signals, threshold) {
+        var distance = threshold,
             index = 0,
             tmp = 0;
 
@@ -129,7 +129,7 @@ function Graphesizer(canvas) {
             }
         }
 
-        return index;
+        return (distance < threshold) ? index : -1;
     }
 
     /* -> int (index of color)
@@ -280,6 +280,7 @@ function Graphesizer(canvas) {
             stroke_width: 1,
 
             drawExpression: true,
+            selectThreshold: 100, // px of fuzziness on singal click-selection
 
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
@@ -290,7 +291,7 @@ function Graphesizer(canvas) {
 
         states: {
             addButtonHover: false,
-            selectedSignal: 0,
+            selectedSignal: -1,
             dragging: false,
             dragXOrigin: 0
 
@@ -352,26 +353,28 @@ function Graphesizer(canvas) {
             }
 
             if (this.states.dragging) {
-                var signal = this.signals[this.states.selectedSignal];
+                if (this.states.selectedSignal != -1) {
+                    var signal = this.signals[this.states.selectedSignal];
 
-                // x - dephase
-                var delta = (x - this.states.dragXOrigin);
-                signal.phase = signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1;
+                    // x - dephase
+                    var delta = (x - this.states.dragXOrigin);
+                    signal.phase = signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1;
 
-                // y - amplify
-                delta = (y - this.states.dragYOrigin);
-                signal.amplitude = signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio);
+                    // y - amplify
+                    delta = (y - this.states.dragYOrigin);
+                    signal.amplitude = signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio);
 
-                if (signal.amplitude <= 0) {
-                    this.signals.splice(this.states.selectedSignal, 1);
-                    this.states.selectedSignal = -1;
+                    if (signal.amplitude <= 0) {
+                        this.signals.splice(this.states.selectedSignal, 1);
+                        this.states.selectedSignal = -1;
+                    }
+
+                    // sample
+                    signal.sample(1 / this.states.zoom, // rate
+                            this.width / this.states.zoom); //duration
+
+                    this.draw();
                 }
-
-                // sample
-                signal.sample(1 / this.states.zoom, // rate
-                        this.width / this.states.zoom); //duration
-
-                this.draw();
             }
 
             return this;
@@ -385,14 +388,23 @@ function Graphesizer(canvas) {
                 this.states.dragging = true;
                 this.states.dragXOrigin = x;
                 this.states.dragYOrigin = y;
-                this.signals[this.states.selectedSignal].stroke_width = 1; // normal stroke width
 
-                this.states.selectedSignal = getClosest(x, y, this.signals);
+                var current_selection = this.states.selectedSignal;
 
-                var signal = this.signals[this.states.selectedSignal];
-                signal.stroke_width = 3; // selected signal stroke width
-                signal.prev_phase = signal.phase;
-                signal.prev_amplitude = signal.amplitude;
+                if (current_selection != -1) {
+                    this.signals[current_selection].stroke_width = this.options.stroke_width;
+                    this.draw();
+                }
+
+                var closest = getClosest(x, y, this.signals, this.options.selectThreshold);
+                this.states.selectedSignal = closest;
+
+                if (closest != -1) {
+                    var signal = this.signals[closest];
+                    signal.stroke_width = 3; // selected signal stroke width
+                    signal.prev_phase = signal.phase;
+                    signal.prev_amplitude = signal.amplitude;
+                }
             }
 
             return this;
@@ -432,11 +444,9 @@ function Graphesizer(canvas) {
                 signal = this.signals[this.states.selectedSignal];
 
             signal.frequency += delta;
-            console.log(signal.frequency);
             signal.sample(1 / this.states.zoom,
                           this.width / this.states.zoom);
 
-            console.log(signal.frequency);
             this.draw();
         },
 
