@@ -278,6 +278,7 @@ function Graphesizer(canvas) {
              */
             amplitude_ratio:  1 / 3,
             stroke_width: 1,
+            zoom_factor: 80,
 
             drawExpression: true,
             selectThreshold: 100, // px of fuzziness on singal click-selection
@@ -294,7 +295,6 @@ function Graphesizer(canvas) {
             selectedSignal: -1,
             dragging: false,
             dragXOrigin: 0
-
         },
 
         init: function (canvas) {
@@ -307,7 +307,7 @@ function Graphesizer(canvas) {
             this.width = canvas.width;
             this.height = canvas.height;
 
-            this.states.zoom = this.width * 80; // 80 is aesthetically pleasing on chromebook
+            this.states.zoom = this.width * this.options.zoom_factor;
 
             this.signals = [];
             this.audio = [];
@@ -353,11 +353,12 @@ function Graphesizer(canvas) {
             }
 
             if (this.states.dragging) {
+                var delta = (x - this.states.dragXOrigin);
+
                 if (this.states.selectedSignal != -1) {
                     var signal = this.signals[this.states.selectedSignal];
 
                     // x - dephase
-                    var delta = (x - this.states.dragXOrigin);
                     signal.phase = signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1;
 
                     // y - amplify
@@ -372,9 +373,13 @@ function Graphesizer(canvas) {
                     // sample
                     signal.sample(1 / this.states.zoom, // rate
                             this.width / this.states.zoom); //duration
-
-                    this.draw();
                 }
+                else { // we are draggin canvas
+                    this.states.zoom = this.states.prev_zoom + delta * this.options.zoom_factor;
+                    this.resample();
+                }
+
+                this.draw();
             }
 
             return this;
@@ -389,10 +394,10 @@ function Graphesizer(canvas) {
                 this.states.dragXOrigin = x;
                 this.states.dragYOrigin = y;
 
-                var current_selection = this.states.selectedSignal;
+                var previous_selection = this.states.selectedSignal;
 
-                if (current_selection != -1) {
-                    this.signals[current_selection].stroke_width = this.options.stroke_width;
+                if (previous_selection != -1) {
+                    this.signals[previous_selection].stroke_width = this.options.stroke_width;
                 }
 
                 var closest = getClosest(x, y, this.signals, this.options.selectThreshold);
@@ -403,6 +408,9 @@ function Graphesizer(canvas) {
                     signal.stroke_width = 3; // selected signal stroke width
                     signal.prev_phase = signal.phase;
                     signal.prev_amplitude = signal.amplitude;
+                }
+                else {
+                    this.states.prev_zoom = this.states.zoom;
                 }
 
                 this.draw();
@@ -473,6 +481,19 @@ function Graphesizer(canvas) {
                 sum = 0;
             }
 
+            return this;
+        },
+
+        /* (re)sample every signal in this.signals
+         * necessary when something is affecting all signals,
+         * such as changing the zoom
+         */
+        resample: function (rate, duration) {
+            for (var i = 0; i < this.signals.length; i++) {
+                this.signals[i].sample(1 / this.states.zoom,
+                                       this.width / this.states.zoom);
+            }
+            
             return this;
         },
 
