@@ -393,7 +393,6 @@ function Graphesizer(canvas) {
 
                 if (current_selection != -1) {
                     this.signals[current_selection].stroke_width = this.options.stroke_width;
-                    this.draw();
                 }
 
                 var closest = getClosest(x, y, this.signals, this.options.selectThreshold);
@@ -405,6 +404,8 @@ function Graphesizer(canvas) {
                     signal.prev_phase = signal.phase;
                     signal.prev_amplitude = signal.amplitude;
                 }
+
+                this.draw();
             }
 
             return this;
