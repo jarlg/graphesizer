@@ -46,15 +46,15 @@ function Graphesizer(canvas) {
         return signal;
     }
 
-    function drawCurve(context, curve, color, stroke_width) {
+    function drawCurve(context, start, curve, color, stroke_width) {
         context.beginPath();
         context.strokeStyle = color;
         context.lineWidth = stroke_width;
-        context.moveTo(0, curve[0]);
+        context.moveTo(0, curve[start]);
 
         var y;
         for (var i = 1; i < curve.length; i++) {
-            y = curve[i];
+            y = curve[(i+start)%curve.length];
             context.lineTo(i, y);
             context.moveTo(i, y);
         }
@@ -188,9 +188,9 @@ function Graphesizer(canvas) {
         },
 
         draw: function () {
-            drawCurve(this.context, this.curve, this.color, this.stroke_width);
+            drawCurve(this.context, 0, this.curve, this.color, this.stroke_width);
             return this;
-        }
+        },
     }
 
 
@@ -241,27 +241,6 @@ function Graphesizer(canvas) {
     }
 
 
-    /* wave expression on bottom of screen
-     * can modify frequencies of waves,
-     * modify "mode" as in [add/multiply/divide]
-     */
-    function WaveExpression(context, x, y, fontsize, spacing) {
-        'use strict';
-        return this.init(context, x, y, fontsize, spacing);
-    }
-
-    WaveExpression.prototype = {
-        init: function (context, x, y, fontsize, spacing, stroke_width) {
-            this.signals = [];
-            this.stroke_width = stroke_width;
-        },
-
-        add: function (signal) {
-            this.signals.push(signal);
-        }
-    }
-
-
     /* Graphesizer object takes care of the canvas:
      * drawing signals,
      * handling input,
@@ -279,6 +258,7 @@ function Graphesizer(canvas) {
             amplitude_ratio:  1 / 3,
             stroke_width: 1,
             zoom_factor: 80,
+            play_rate: 30,
 
             drawExpression: true,
             selectThreshold: 60, // px of fuzziness on singal click-selection
@@ -316,7 +296,6 @@ function Graphesizer(canvas) {
             this.addButton = new AddButton(this.context, 30, 30, 40, 40, 10);
             this.addButton.draw(this.options.addButtonColor);
 
-            this.waveExpression = new WaveExpression(this.context, 0,0,0,0);
 
             var self = this;
             canvas.addEventListener('mousemove', function (event) { self.update(event) }, false);
@@ -449,6 +428,7 @@ function Graphesizer(canvas) {
         onmousewheel: function (event) {
             event.preventDefault();
 
+            if (this.states.selectedSignal != -1) {
             var delta = event.wheelDeltaY,
                 signal = this.signals[this.states.selectedSignal];
 
@@ -457,11 +437,11 @@ function Graphesizer(canvas) {
                           this.width / this.states.zoom);
 
             this.draw();
+            }
         },
 
         add: function (signal) {
             this.signals.push(signal);
-            this.waveExpression.add(signal);
 
             return this;
         },
@@ -484,6 +464,16 @@ function Graphesizer(canvas) {
             return this;
         },
 
+        /* dephases every signal in this.signals by delta
+         * useful because playback/motion of waves can be seen as
+         * a sequential dephasage (since we are bound to origo = o along x axis)
+         *
+         * a more efficient solution is to simply cycle the curves of all signals
+         */
+        dephase: function (delta) {
+
+        }, 
+
         /* (re)sample every signal in this.signals
          * necessary when something is affecting all signals,
          * such as changing the zoom
@@ -505,7 +495,7 @@ function Graphesizer(canvas) {
 
         drawExpression: function () {
             if (this.signals.length > 1) {
-                drawCurve(this.context, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
+                drawCurve(this.context, 0, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
             }
             return this;
         },
@@ -523,7 +513,30 @@ function Graphesizer(canvas) {
                 this.signals[i].render(this.width, this.options.amplitude_ratio)
                     .draw();
             }
-            this.addButton.draw(this.options.addButtonColor);
+            
+            if (this.states.addButtonHover) {
+                this.addButton.draw(this.options.addButtonHoverColor);
+            }
+            else {
+                this.addButton.draw(this.options.addButtonColor);
+            }
         },
+
+        play: function () {
+            var i = 0,
+                self = this;
+            setInterval(function() { 
+                self.clear();
+                for (var s = 0; s < self.signals.length; s++) {
+                    drawCurve(self.context,
+                        i,
+                        self.signals[s].curve,
+                        self.signals[s].color,
+                        self.options.stroke_width);
+                }
+                i += (self.width / self.states.zoom) * self.options.play_rate;
+            },
+            1 / self.options.play_rate);
+        }
     }
 })(window, document);
