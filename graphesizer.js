@@ -281,7 +281,7 @@ function Graphesizer(canvas) {
             zoom_factor: 80,
 
             drawExpression: true,
-            selectThreshold: 100, // px of fuzziness on singal click-selection
+            selectThreshold: 60, // px of fuzziness on singal click-selection
 
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
@@ -504,7 +504,9 @@ function Graphesizer(canvas) {
         },
 
         drawExpression: function () {
-            drawCurve(this.context, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
+            if (this.signals.length > 1) {
+                drawCurve(this.context, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
+            }
             return this;
         },
 
