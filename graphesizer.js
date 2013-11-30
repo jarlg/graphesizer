@@ -56,7 +56,6 @@ function Graphesizer(canvas) {
         for (var i = 1; i < curve.length; i++) {
             y = curve[(i+start)%curve.length];
             context.lineTo(i, y);
-            context.moveTo(i, y);
         }
         context.stroke();
     }
@@ -240,6 +239,49 @@ function Graphesizer(canvas) {
         }
     }
 
+    /* play button for controlling playback of sound and
+     * movement of signals. on/off
+     */
+    function PlayButton(context, x, y, width, height) {
+        'use strict';
+        return this.init(context, x, y, width, height);
+    }
+
+    PlayButton.prototype = {
+        init: function (context, x, y, width, height) {
+            this.context = context,
+            this.x = x,
+            this.y = y,
+            this.width = width,
+            this.height = height;
+
+            this.fuzzy = 5;
+
+            return this;
+        },
+
+        draw: function (color) {
+            var ctx = this.context;
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x, this.y + this.height);
+            ctx.lineTo(this.x + this.width, this.y + (this.height / 2));
+            ctx.lineTo(this.x, this.y);
+
+            ctx.closePath();
+            ctx.fill();
+
+            return this;
+        },
+
+        /* same as for addbutton */
+        hover: function (x, y) {
+            return hover(x, y, this.x, this.y, this.width, this.height, this.fuzzy);
+        }
+    }
 
     /* Graphesizer object takes care of the canvas:
      * drawing signals,
@@ -249,8 +291,8 @@ function Graphesizer(canvas) {
     Graphesizer.prototype = {
 
         options: {
-            addButtonColor: "#657b83",
-            addButtonHoverColor: "#002b36",
+            buttonColor: "#657b83",
+            buttonHoverColor: "#002b36",
 
             /* signal of amplitude 1 goes 1/3 of the way from
              * x-axis to top of screen
@@ -258,7 +300,7 @@ function Graphesizer(canvas) {
             amplitude_ratio:  1 / 3,
             stroke_width: 1,
             zoom_factor: 80,
-            play_rate: 30,
+            play_rate: 1,
 
             drawExpression: true,
             selectThreshold: 60, // px of fuzziness on singal click-selection
@@ -272,6 +314,7 @@ function Graphesizer(canvas) {
 
         states: {
             addButtonHover: false,
+            playButtonHover: false,
             selectedSignal: -1,
             dragging: false,
             dragXOrigin: 0
@@ -294,8 +337,10 @@ function Graphesizer(canvas) {
             this.curve = [];
 
             this.addButton = new AddButton(this.context, 30, 30, 40, 40, 10);
-            this.addButton.draw(this.options.addButtonColor);
+            this.addButton.draw(this.options.buttonColor);
 
+            this.playButton = new PlayButton(this.context, 100, 30, 40, 40);
+            this.playButton.draw(this.options.buttonColor);
 
             var self = this;
             canvas.addEventListener('mousemove', function (event) { self.update(event) }, false);
@@ -320,14 +365,27 @@ function Graphesizer(canvas) {
 
             if (this.addButton.hover(x, y)) {
                 if (!this.states.addButtonHover) {
-                    this.addButton.draw(this.options.addButtonHoverColor);
+                    this.addButton.draw(this.options.buttonHoverColor);
                     this.states.addButtonHover = true;
                 }
             }
             else {
                 if (this.states.addButtonHover) {
-                    this.addButton.draw(this.options.addButtonColor);
+                    this.addButton.draw(this.options.buttonColor);
                     this.states.addButtonHover = false;
+                }
+            }
+
+            if (this.playButton.hover(x, y)) {
+                if (!this.states.playButtonHover) {
+                    this.playButton.draw(this.options.buttonHoverColor);
+                    this.states.playButtonHover = true;
+                }
+            }
+            else {
+                if (this.states.playButtonHover) {
+                    this.playButton.draw(this.options.buttonColor);
+                    this.states.playButtonHover = false;
                 }
             }
 
@@ -368,7 +426,7 @@ function Graphesizer(canvas) {
             var x = event.clientX,
                 y = event.clientY;
 
-            if (!this.states.addButtonHover) {
+            if (!this.states.addButtonHover && !this.states.playButtonHover) {
                 this.states.dragging = true;
                 this.states.dragXOrigin = x;
                 this.states.dragYOrigin = y;
@@ -515,13 +573,26 @@ function Graphesizer(canvas) {
             }
             
             if (this.states.addButtonHover) {
-                this.addButton.draw(this.options.addButtonHoverColor);
+                this.addButton.draw(this.options.buttonHoverColor);
             }
             else {
-                this.addButton.draw(this.options.addButtonColor);
+                this.addButton.draw(this.options.buttonColor);
+            }
+
+            if (this.states.playButtonHover) {
+                this.playButton.draw(this.options.buttonHoverColor);
+            }
+            else {
+                this.playButton.draw(this.options.buttonColor);
             }
         },
 
+        /* currently cycles already rendered curves for efficiency,
+         * this isn't prefect/accurate beacuse they don't match/loop
+         * over ends of screens
+         *
+         * a solution would be to sequentially dephase all frequencies
+         */
         play: function () {
             var i = 0,
                 self = this;
@@ -534,6 +605,7 @@ function Graphesizer(canvas) {
                         self.signals[s].color,
                         self.options.stroke_width);
                 }
+                // TODO fix this shit because it isn't working correctly
                 i += (self.width / self.states.zoom) * self.options.play_rate;
             },
             1 / self.options.play_rate);
