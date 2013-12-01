@@ -158,7 +158,76 @@ function Graphesizer(canvas) {
         return signals.length;
     }
 
+    /* PROTOTYPES or something
+     */
 
+    function initButton(self) {
+        return function (context, x, y, width, height, normalColor, hoverColor) {
+            self.context = context;
+            self.x = x;
+            self.y = y;
+            self.width = width;
+            self.height = height;
+
+            self.hovering = false,
+
+            self.normalColor = normalColor;
+            self.hoverColor = hoverColor;
+
+            self.color = normalColor;
+
+            self.fuzzy = 5;
+
+            return self;
+        }
+    }
+
+    function afterInitButton(self) {
+            self.hover = handleHover(self);
+            self.update = updateButton(self);
+            self.draw();
+    }
+
+    /* HANDLERS
+     * i.e. onmousemove when dragging,
+     * every period when playing (at a certain fps)
+     */
+
+    /* hover handler for buttons */
+    function handleHover(self) {
+        /* -> bool
+         * return true if event (x, y) is over the button, gives fuzzyness
+         */
+        return function (x, y) {
+            return hover(x, y, self.x, self.y, self.width, self.height, self.fuzzy);
+        };
+    }
+
+    /* update handler for buttons */
+    function updateButton(self) {
+        /* -> void
+         * handles hover
+         */
+        return function (x, y) {
+            if (self.hover(x, y)) {
+                if (!self.hovering) {
+                    self.hovering = true;
+                    self.color = self.hoverColor;
+                    self.draw();
+                }
+            }
+            else {
+                if (self.hovering) {
+                    self.hovering = false;
+                    self.color = self.normalColor;
+                    self.draw();
+                }
+            }
+        };
+    }
+
+    /* OBJECTS for signals, buttons and graphesizer
+     */
     function Signal(context, frequency, color, stroke_width) {
         'use strict';
         return this.init(context, frequency, color, stroke_width);
@@ -188,36 +257,27 @@ function Graphesizer(canvas) {
 
         draw: function () {
             drawCurve(this.context, 0, this.curve, this.color, this.stroke_width);
-            return this;
         },
     }
 
-
-    function AddButton(context, x, y, width, height, thickness) {
+    function AddButton(context, x, y, width, height, normalColor, hoverColor) {
         'use strict';
-        return this.init(context, x, y, width, height, thickness);
+        this.init = initButton(this);
+        this.thickness = width / 4;
+        return this.init(context, x, y, width, height, normalColor, hoverColor);
     }
 
     AddButton.prototype = {
-        init: function (context, x, y, width, height, thickness) {
-            this.context = context;
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.thickness = thickness;
-
-            this.fuzzy = 5;
-
-            return this;
+        initialize: function () {
+            afterInitButton(this);
         },
 
         /* -> void
          * takes a color, draws button on canvas, '+'
          */
-        draw: function (color) {
+        draw: function () {
             var y1 = this.y + Math.floor(this.height / 2) - Math.floor(this.thickness / 2);
-            this.context.fillStyle = color;
+            this.context.fillStyle = this.color;
             this.context.fillRect(this.x,
                     y1,
                     this.width,
@@ -227,43 +287,47 @@ function Graphesizer(canvas) {
                     this.y,
                     this.thickness,
                     this.height);
-
-            return this;
         },
 
-        /* -> bool
-         * checks if two coordinates are over the button
-         */
-        hover: function (x, y) {
-            return hover(x, y, this.x, this.x, this.width, this.height, this.fuzzy);
+        press:  function (g) {
+            var colorIndex = chooseColor(g.options.colors,
+                    g.signals);
+            var color = g.options.colors[colorIndex];
+
+            var signal = new Signal(g.context,
+                    g.options.defaultSignal,
+                    color,
+                    g.options.stroke_width);
+            g.add(signal);
+
+            signal.sample(1 / g.states.zoom, //rate
+                    g.width / g.states.zoom);
+            signal.render();
+
+            g.draw();
+
+            return g;
         }
     }
 
     /* play button for controlling playback of sound and
      * movement of signals. on/off
      */
-    function PlayButton(context, x, y, width, height) {
+    function PlayButton(context, x, y, width, height, normalColor, hoverColor) {
         'use strict';
-        return this.init(context, x, y, width, height);
+        this.init = initButton(this);
+        return this.init(context, x, y, width, height, normalColor, hoverColor);
     }
 
     PlayButton.prototype = {
-        init: function (context, x, y, width, height) {
-            this.context = context,
-            this.x = x,
-            this.y = y,
-            this.width = width,
-            this.height = height;
-
-            this.fuzzy = 5;
-
-            return this;
+        initialize: function () {
+            afterInitButton(this);
         },
 
-        draw: function (color) {
+        draw: function () {
             var ctx = this.context;
 
-            ctx.fillStyle = color;
+            ctx.fillStyle = this.color;
             ctx.beginPath();
 
             ctx.moveTo(this.x, this.y);
@@ -273,13 +337,16 @@ function Graphesizer(canvas) {
 
             ctx.closePath();
             ctx.fill();
-
-            return this;
         },
 
-        /* same as for addbutton */
-        hover: function (x, y) {
-            return hover(x, y, this.x, this.y, this.width, this.height, this.fuzzy);
+        press: function (g) {
+            if (!g.states.playing) {
+                g.play();
+            }
+
+            g.states.playing = !g.states.playing;
+
+            return g;
         }
     }
 
@@ -300,9 +367,9 @@ function Graphesizer(canvas) {
             amplitude_ratio:  1 / 3,
             stroke_width: 1,
             zoom_factor: 80,
-            play_rate: 1,
+            play_rate: 30, // fps
 
-            drawExpression: true,
+            drawExpression: false,
             selectThreshold: 60, // px of fuzziness on singal click-selection
 
             defaultSignal: 220,
@@ -313,10 +380,10 @@ function Graphesizer(canvas) {
         },
 
         states: {
-            addButtonHover: false,
-            playButtonHover: false,
             selectedSignal: -1,
             dragging: false,
+            hovering: false,
+            playing: false,
             dragXOrigin: 0
         },
 
@@ -335,12 +402,13 @@ function Graphesizer(canvas) {
             this.signals = [];
             this.audio = [];
             this.curve = [];
+            this.buttons = [];
 
-            this.addButton = new AddButton(this.context, 30, 30, 40, 40, 10);
-            this.addButton.draw(this.options.buttonColor);
-
-            this.playButton = new PlayButton(this.context, 100, 30, 40, 40);
-            this.playButton.draw(this.options.buttonColor);
+            this.buttons.push(new AddButton(this.context, 30, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
+            this.buttons.push(new PlayButton(this.context, 100, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
+            for (var i = 0; i < this.buttons.length; i++) {
+                this.buttons[i].initialize();
+            }
 
             var self = this;
             canvas.addEventListener('mousemove', function (event) { self.update(event) }, false);
@@ -363,32 +431,6 @@ function Graphesizer(canvas) {
             var x = event.clientX,
                 y = event.clientY;
 
-            if (this.addButton.hover(x, y)) {
-                if (!this.states.addButtonHover) {
-                    this.addButton.draw(this.options.buttonHoverColor);
-                    this.states.addButtonHover = true;
-                }
-            }
-            else {
-                if (this.states.addButtonHover) {
-                    this.addButton.draw(this.options.buttonColor);
-                    this.states.addButtonHover = false;
-                }
-            }
-
-            if (this.playButton.hover(x, y)) {
-                if (!this.states.playButtonHover) {
-                    this.playButton.draw(this.options.buttonHoverColor);
-                    this.states.playButtonHover = true;
-                }
-            }
-            else {
-                if (this.states.playButtonHover) {
-                    this.playButton.draw(this.options.buttonColor);
-                    this.states.playButtonHover = false;
-                }
-            }
-
             if (this.states.dragging) {
                 var delta = (x - this.states.dragXOrigin);
 
@@ -405,55 +447,84 @@ function Graphesizer(canvas) {
                     if (signal.amplitude <= 0) {
                         this.signals.splice(this.states.selectedSignal, 1);
                         this.states.selectedSignal = -1;
+                        this.states.dragging = false;
                     }
-
-                    // sample
-                    signal.sample(1 / this.states.zoom, // rate
-                            this.width / this.states.zoom); //duration
+                    else {
+                        signal.sample(1 / this.states.zoom, // rate
+                                this.width / this.states.zoom); //duration
+                    }
                 }
                 else { // we are draggin canvas
+                    /* not necessarily! this is triggered after deleting a signal by squashing it,
+                     * since we set selectedSignal to -1.
+                     * TODO: fix this, perhaps by modularizing update();
+                     * when dragging canvas, we set update = handleDragCanvas,
+                     * etc. for other update-handlers
+                     */
                     this.states.zoom = this.states.prev_zoom + delta * this.options.zoom_factor;
                     this.resample();
                 }
-
                 this.draw();
             }
+            else {
+                this.updateUI(x, y);
+            }
+        },
 
-            return this;
+        drawUI: function () {
+            for (var i = 0; i < this.buttons.length; i++) {
+                this.buttons[i].draw();
+            }
+        },
+
+        updateUI: function (x, y) {
+            this.states.hovering = false;
+            for (var i = 0; i < this.buttons.length; i++) {
+                this.buttons[i].update(x, y);
+                if (this.buttons[i].hovering) {
+                    this.states.hovering = true;
+                }
+            }
+        },
+
+        select: function (index) {
+                this.states.selectedSignal = index;
+                var signal = this.signals[index];
+                signal.stroke_width = 3; // selected signal stroke_width
+                signal.prev_phase = signal.phase;
+                signal.prev_amplitude = signal.amplitude;
+        },
+
+        resetSelection: function () {
+            if (this.states.selectedSignal != -1) {
+                this.signals[this.states.selectedSignal].stroke_width = this.options.stroke_width;
+            }
+        },
+
+        beginDrag: function (x, y) {
+            this.states.dragging = true;
+            this.states.dragXOrigin = x;
+            this.states.dragYOrigin = y;
         },
 
         onmousedown: function (event) {
             var x = event.clientX,
                 y = event.clientY;
 
-            if (!this.states.addButtonHover && !this.states.playButtonHover) {
-                this.states.dragging = true;
-                this.states.dragXOrigin = x;
-                this.states.dragYOrigin = y;
-
-                var previous_selection = this.states.selectedSignal;
-
-                if (previous_selection != -1) {
-                    this.signals[previous_selection].stroke_width = this.options.stroke_width;
-                }
+            if (!this.states.hovering) {
+                this.resetSelection();
 
                 var closest = getClosest(x, y, this.signals, this.options.selectThreshold);
-                this.states.selectedSignal = closest;
 
                 if (closest != -1) {
-                    var signal = this.signals[closest];
-                    signal.stroke_width = 3; // selected signal stroke width
-                    signal.prev_phase = signal.phase;
-                    signal.prev_amplitude = signal.amplitude;
+                    this.beginDrag(x, y);
+                    this.select(closest);
                 }
-                else {
+                else { // begin zoom
                     this.states.prev_zoom = this.states.zoom;
                 }
-
                 this.draw();
             }
-
-            return this;
         },
 
         onmouseup: function (event) {
@@ -461,22 +532,10 @@ function Graphesizer(canvas) {
                 y = event.clientY;
 
             if (!this.states.dragging) {
-                if (this.states.addButtonHover) {
-                    var colorIndex = chooseColor(this.options.colors,
-                                                 this.signals);
-                    var color = this.options.colors[colorIndex];
-
-                    var signal = new Signal(this.context,
-                                        this.options.defaultSignal,
-                                        color,
-                                        this.options.stroke_width);
-                    this.add(signal);
-
-                    signal.sample(1 / this.states.zoom, //rate
-                                  this.width / this.states.zoom)
-                        .render();
-
-                    this.draw();
+                for (var i = 0; i < this.buttons.length; i++) {
+                    if (this.buttons[i].hovering) {
+                        this.buttons[i].press(this);
+                    }
                 }
             }
 
@@ -487,21 +546,19 @@ function Graphesizer(canvas) {
             event.preventDefault();
 
             if (this.states.selectedSignal != -1) {
-            var delta = event.wheelDeltaY,
-                signal = this.signals[this.states.selectedSignal];
+                var delta = event.wheelDeltaY,
+                    signal = this.signals[this.states.selectedSignal];
 
-            signal.frequency += delta;
-            signal.sample(1 / this.states.zoom,
-                          this.width / this.states.zoom);
+                signal.frequency -= delta;
+                signal.sample(1 / this.states.zoom,
+                        this.width / this.states.zoom);
 
-            this.draw();
+                this.draw();
             }
         },
 
         add: function (signal) {
             this.signals.push(signal);
-
-            return this;
         },
 
         /* generates a total wave expression from all signals,
@@ -518,8 +575,6 @@ function Graphesizer(canvas) {
                 this.audio.push(sum);
                 sum = 0;
             }
-
-            return this;
         },
 
         /* dephases every signal in this.signals by delta
@@ -541,8 +596,6 @@ function Graphesizer(canvas) {
                 this.signals[i].sample(1 / this.states.zoom,
                                        this.width / this.states.zoom);
             }
-            
-            return this;
         },
 
         render: function () {
@@ -555,36 +608,23 @@ function Graphesizer(canvas) {
             if (this.signals.length > 1) {
                 drawCurve(this.context, 0, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
             }
-            return this;
         },
 
         draw: function () {
             this.clear();
 
             if (this.options.drawExpression) {
-                this.sample()
-                    .render()
-                    .drawExpression();
+                this.sample();
+                this.render();
+                this.drawExpression();
             }
 
             for (var i = 0; i < this.signals.length; i++) {
-                this.signals[i].render(this.width, this.options.amplitude_ratio)
-                    .draw();
-            }
-            
-            if (this.states.addButtonHover) {
-                this.addButton.draw(this.options.buttonHoverColor);
-            }
-            else {
-                this.addButton.draw(this.options.buttonColor);
+                this.signals[i].render(this.width, this.options.amplitude_ratio);
+                this.signals[i].draw();
             }
 
-            if (this.states.playButtonHover) {
-                this.playButton.draw(this.options.buttonHoverColor);
-            }
-            else {
-                this.playButton.draw(this.options.buttonColor);
-            }
+            this.drawUI();
         },
 
         /* currently cycles already rendered curves for efficiency,
@@ -600,15 +640,18 @@ function Graphesizer(canvas) {
                 self.clear();
                 for (var s = 0; s < self.signals.length; s++) {
                     drawCurve(self.context,
-                        i,
+                        Math.floor(i),
                         self.signals[s].curve,
                         self.signals[s].color,
                         self.options.stroke_width);
                 }
+                self.drawUI();
                 // TODO fix this shit because it isn't working correctly
-                i += (self.width / self.states.zoom) * self.options.play_rate;
+                i += Math.floor(self.options.play_rate * self.states.zoom / self.width);
             },
-            1 / self.options.play_rate);
+            1000 / self.options.play_rate);
+
+            this.playing = true;
         }
     }
 })(window, document);
