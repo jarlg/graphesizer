@@ -300,13 +300,11 @@ function Graphesizer(canvas) {
                     g.options.stroke_width);
             g.add(signal);
 
-            signal.sample(1 / g.states.zoom, //rate
-                    g.width / g.states.zoom);
+            signal.sample(g.getRate(),
+                    g.getDuration());
             signal.render();
 
             g.draw();
-
-            return g;
         }
     }
 
@@ -316,6 +314,8 @@ function Graphesizer(canvas) {
     function PlayButton(context, x, y, width, height, normalColor, hoverColor) {
         'use strict';
         this.init = initButton(this);
+        this.playing = false;
+        this.playID = 0;
         return this.init(context, x, y, width, height, normalColor, hoverColor);
     }
 
@@ -327,26 +327,50 @@ function Graphesizer(canvas) {
         draw: function () {
             var ctx = this.context;
 
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
+            if (!this.playing) {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
 
-            ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x, this.y + this.height);
-            ctx.lineTo(this.x + this.width, this.y + (this.height / 2));
-            ctx.lineTo(this.x, this.y);
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x, this.y + this.height);
+                ctx.lineTo(this.x + this.width, this.y + (this.height / 2));
+                ctx.lineTo(this.x, this.y);
 
-            ctx.closePath();
-            ctx.fill();
+                ctx.closePath();
+                ctx.fill();
+            }
+            else {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x, this.y + this.height);
+                ctx.lineTo(this.x + this.width, this.y + this.height);
+                ctx.lineTo(this.x + this.width, this.y);
+
+                ctx.closePath();
+                ctx.fill();
+            }
         },
 
-        press: function (g) {
-            if (!g.states.playing) {
-                g.play();
+        press: function (g, x, y) {
+            if (!this.playing) {
+                this.playing = true;
+            }
+            else {
+                this.playing = false;
             }
 
-            g.states.playing = !g.states.playing;
+            g.states.playing = this.playing;
 
-            return g;
+            if (g.states.playing) {
+                g.drawUI();
+                this.playID = g.play(0);
+            }
+            else {
+                clearInterval(this.playID);
+                g.draw();
+            }
         }
     }
 
@@ -450,8 +474,8 @@ function Graphesizer(canvas) {
                         this.states.dragging = false;
                     }
                     else {
-                        signal.sample(1 / this.states.zoom, // rate
-                                this.width / this.states.zoom); //duration
+                        signal.sample(this.getRate(),
+                                this.getDuration());
                     }
                 }
                 else { // we are draggin canvas
@@ -534,7 +558,7 @@ function Graphesizer(canvas) {
             if (!this.states.dragging) {
                 for (var i = 0; i < this.buttons.length; i++) {
                     if (this.buttons[i].hovering) {
-                        this.buttons[i].press(this);
+                        this.buttons[i].press(this, x, y);
                     }
                 }
             }
@@ -550,11 +574,19 @@ function Graphesizer(canvas) {
                     signal = this.signals[this.states.selectedSignal];
 
                 signal.frequency -= delta;
-                signal.sample(1 / this.states.zoom,
-                        this.width / this.states.zoom);
+                signal.sample(this.getRate(),
+                        this.getDuration());
 
                 this.draw();
             }
+        },
+
+        getRate: function () {
+            return 1 / this.states.zoom;
+        },
+
+        getDuration: function () {
+            return this.width / this.states.zoom;
         },
 
         add: function (signal) {
@@ -593,8 +625,8 @@ function Graphesizer(canvas) {
          */
         resample: function (rate, duration) {
             for (var i = 0; i < this.signals.length; i++) {
-                this.signals[i].sample(1 / this.states.zoom,
-                                       this.width / this.states.zoom);
+                this.signals[i].sample(this.getRate(),
+                        this.getDuration());
             }
         },
 
@@ -634,9 +666,9 @@ function Graphesizer(canvas) {
          * a solution would be to sequentially dephase all frequencies
          */
         play: function () {
-            var i = 0,
-                self = this;
-            setInterval(function() { 
+            var self = this,
+                i = 0;
+            return setInterval(function () { 
                 self.clear();
                 for (var s = 0; s < self.signals.length; s++) {
                     drawCurve(self.context,
@@ -645,13 +677,10 @@ function Graphesizer(canvas) {
                         self.signals[s].color,
                         self.options.stroke_width);
                 }
+                i += 1000 * self.options.play_rate * self.width / self.states.zoom;
                 self.drawUI();
-                // TODO fix this shit because it isn't working correctly
-                i += Math.floor(self.options.play_rate * self.states.zoom / self.width);
             },
-            1000 / self.options.play_rate);
-
-            this.playing = true;
+            1000 / this.options.play_rate);
         }
     }
 })(window, document);
