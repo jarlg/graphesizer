@@ -14,12 +14,12 @@ function Graphesizer(canvas) {
      */
     function hover(x, y, x1, y1, width, height, fuzzy) {
         var deltaX = x - x1,
-deltaY = y - y1;
-if (deltaX > -fuzzy && deltaX < width + fuzzy &&
-    deltaY > -fuzzy && deltaY < height + fuzzy) {
-        return true;
-    }
-return false;
+            deltaY = y - y1;
+        if (deltaX > -fuzzy && deltaX < width + fuzzy &&
+            deltaY > -fuzzy && deltaY < height + fuzzy) {
+                return true;
+            }
+        return false;
     }
 
     // -> [Amplitude]
@@ -162,7 +162,6 @@ return false;
     */
 
     function Button(context, x, y, width, height, normalColor, hoverColor) {
-        'use strict';
         return this.init(context, x, y, width, height, normalColor, hoverColor);
     }
 
@@ -177,9 +176,9 @@ return false;
             this.width = width;
             this.height = height;
 
-            this.hovering = false,
+            this.hovering = false;
 
-                this.normalColor = normalColor;
+            this.normalColor = normalColor;
             this.hoverColor = hoverColor;
 
             this.color = normalColor;
@@ -222,12 +221,11 @@ return false;
                 }
             }
         }
-    }
+    };
 
     /* OBJECTS for signals, buttons and graphesizer
     */
     function Signal(context, frequency, color, stroke_width) {
-        'use strict';
         return this.init(context, frequency, color, stroke_width);
     }
 
@@ -255,10 +253,9 @@ return false;
         draw: function () {
             drawCurve(this.context, 0, this.curve, this.color, this.stroke_width);
         },
-    }
+    };
 
     function AddButton(context, x, y, width, height, normalColor, hoverColor) {
-        'use strict';
         this.thickness = width / 4;
         Button.apply(this, arguments);
         return this;
@@ -287,10 +284,9 @@ return false;
         press: {
             value: function (g) {
                 var colorIndex = chooseColor(g.options.colors,
-                        g.signals);
-                var color = g.options.colors[colorIndex];
-
-                var signal = new Signal(g.context,
+                        g.signals),
+                color = g.options.colors[colorIndex],
+                signal = new Signal(g.context,
                         g.options.defaultSignal,
                         color,
                         g.options.stroke_width);
@@ -309,7 +305,6 @@ return false;
      * movement of signals. on/off
      */
     function PlayButton(context, x, y, width, height, normalColor, hoverColor) {
-        'use strict';
         this.playing = false;
         this.playID = 0;
         Button.apply(this, arguments);
@@ -429,10 +424,10 @@ return false;
             this.buttons.push(new PlayButton(this.context, 100, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
 
             var self = this;
-            canvas.addEventListener('mousemove', function (event) { self.update(event) }, false);
-            canvas.addEventListener('mousedown', function (event) { self.onmousedown(event) }, false);
-            canvas.addEventListener('mouseup', function (event) { self.onmouseup(event) }, false);
-            canvas.addEventListener('mousewheel', function (event) { self.onmousewheel(event) }, false);
+            canvas.addEventListener('mousemove', function (event) { self.update(event); }, false);
+            canvas.addEventListener('mousedown', function (event) { self.onmousedown(event); }, false);
+            canvas.addEventListener('mouseup', function (event) { self.onmouseup(event); }, false);
+            canvas.addEventListener('mousewheel', function (event) { self.onmousewheel(event); }, false);
         },
 
         clear: function () {
@@ -447,7 +442,7 @@ return false;
          */
         update: function (event) {
             var x = event.clientX,
-            y = event.clientY;
+                y = event.clientY;
 
             if (this.states.dragging) {
                 var delta = (x - this.states.dragXOrigin);
@@ -676,5 +671,5 @@ return false;
             },
             1000 / this.options.play_rate);
         }
-    }
+    };
 })(window, document);
