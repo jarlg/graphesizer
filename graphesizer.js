@@ -225,13 +225,14 @@ function Graphesizer(canvas) {
 
     /* OBJECTS for signals, buttons and graphesizer
     */
-    function Signal(context, frequency, color, stroke_width) {
-        return this.init(context, frequency, color, stroke_width);
+    function Signal(aContext, context, frequency, color, stroke_width) {
+        return this.init(aContext, context, frequency, color, stroke_width);
     }
 
     Signal.prototype = {
-        init: function (context, frequency, color, stroke_width) {
+        init: function (aContext, context, frequency, color, stroke_width) {
             this.context = context;
+            this.aContext = aContext;
             this.frequency = frequency;
             this.color = color;
             this.stroke_width = stroke_width;
@@ -240,6 +241,42 @@ function Graphesizer(canvas) {
             this.prev_phase = 0;
             this.amplitude = 1;
             this.prev_amplitude = 0;
+            this.playing = false;
+
+            this.gain = aContext.createGain();
+            this.gain.gain.value= 0.5;
+        },
+        
+        play: function (gainNode) {
+            this.osc = this.aContext.createOscillator();
+            this.osc.frequency.value = this.frequency;
+            this.osc.type = "sine";
+            this.osc.connect(this.gain);
+            this.gain.connect(gainNode);
+
+            this.osc.start(0);
+            this.playing = true;
+        },
+
+        stop: function () {
+            this.osc.stop(0);
+            this.playing = false;
+        },
+
+        modulate: function (deltaX, deltaY) {
+            // TODO ameliorer this (y is not a delta)
+            this.frequency -= deltaX;
+            this.amplitude += deltaY;
+
+            if (this.playing) {
+                this.gain.gain.value = this.amplitude * 0.5;
+                this.osc.frequency.value = this.frequency;
+            }
+        },
+
+        dephase: function (delta) {
+            // TODO obv this is not a delta..
+            this.phase = delta;
         },
 
         sample: function (rate, duration) {
@@ -286,11 +323,17 @@ function Graphesizer(canvas) {
                 var colorIndex = chooseColor(g.options.colors,
                         g.signals),
                 color = g.options.colors[colorIndex],
-                signal = new Signal(g.context,
+                signal = new Signal(g.aContext,
+                        g.context,
                         g.options.defaultSignal,
                         color,
                         g.options.stroke_width);
                 g.add(signal);
+
+                if (g.playing) {
+                    console.log("graph is playing, so we start ");
+                    signal.play(g.gain);
+                }
 
                 signal.sample(g.getRate(),
                         g.getDuration());
@@ -359,7 +402,7 @@ function Graphesizer(canvas) {
                    this.playID = g.play(0);
                }
                else {
-                   clearInterval(this.playID);
+                   g.stop(this.playID);
                    g.draw();
                }
            },
@@ -407,6 +450,14 @@ function Graphesizer(canvas) {
             this.canvas = canvas;
             this.context = canvas.getContext("2d");
 
+            try {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.aContext = new AudioContext();
+            }
+            catch (e) {
+                console.log(e);
+            }
+
             canvas.height = window.innerHeight;
             canvas.width = window.innerWidth;
 
@@ -451,11 +502,11 @@ function Graphesizer(canvas) {
                     var signal = this.signals[this.states.selectedSignal];
 
                     // x - dephase
-                    signal.phase = signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1;
+                    signal.dephase(signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1);
 
                     // y - amplify
                     delta = (y - this.states.dragYOrigin);
-                    signal.amplitude = signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio);
+                    signal.modulate(0, signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio) - signal.amplitude);
 
                     if (signal.amplitude <= 0) {
                         this.signals.splice(this.states.selectedSignal, 1);
@@ -562,7 +613,7 @@ function Graphesizer(canvas) {
                 var delta = event.wheelDeltaY,
                     signal = this.signals[this.states.selectedSignal];
 
-                signal.frequency -= delta;
+                signal.modulate(delta, 0);
                 signal.sample(this.getRate(),
                         this.getDuration());
 
@@ -648,6 +699,15 @@ function Graphesizer(canvas) {
             this.drawUI();
         },
 
+        stop: function (id) {
+            clearInterval(id);
+            for (var i = 0; i < this.signals.length; i++) {
+                this.signals[i].stop(0);
+            }
+
+            this.playing = false;
+        },
+
         /* currently cycles already rendered curves for efficiency,
          * this isn't prefect/accurate beacuse they don't match/loop
          * over ends of screens
@@ -656,7 +716,18 @@ function Graphesizer(canvas) {
          */
         play: function () {
             var self = this,
-            i = 0;
+                i = 0;
+
+            this.gain = this.aContext.createGain();
+            this.gain.gain.value = 1;
+            this.gain.connect(this.aContext.destination);
+
+            for (var i = 0; i < this.signals.length; i++) {
+                this.signals[i].play(this.gain);
+            }
+
+            this.playing = true;
+
             return setInterval(function () { 
                 self.clear();
                 for (var s = 0; s < self.signals.length; s++) {
