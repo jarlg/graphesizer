@@ -251,6 +251,7 @@ function Graphesizer(canvas) {
             this.osc = this.aContext.createOscillator();
             this.osc.frequency.value = this.frequency;
             this.osc.type = "sine";
+
             this.osc.connect(this.gain);
             this.gain.connect(gainNode);
 
@@ -260,11 +261,11 @@ function Graphesizer(canvas) {
 
         stop: function () {
             this.osc.stop(0);
+            this.gain.disconnect();
             this.playing = false;
         },
 
         modulate: function (deltaX, deltaY) {
-            // TODO ameliorer this (y is not a delta)
             this.frequency -= deltaX;
             this.amplitude += deltaY;
 
@@ -473,6 +474,10 @@ function Graphesizer(canvas) {
 
             this.buttons.push(new AddButton(this.context, 30, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
             this.buttons.push(new PlayButton(this.context, 100, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
+
+            this.gain = this.aContext.createGain();
+            this.gain.gain.value = 1;
+            this.gain.connect(this.aContext.destination);
 
             var self = this;
             canvas.addEventListener('mousemove', function (event) { self.update(event); }, false);
@@ -716,13 +721,9 @@ function Graphesizer(canvas) {
          */
         play: function () {
             var self = this,
-                i = 0;
+               i = 0;
 
-            this.gain = this.aContext.createGain();
-            this.gain.gain.value = 1;
-            this.gain.connect(this.aContext.destination);
-
-            for (var i = 0; i < this.signals.length; i++) {
+            for (i = 0; i < this.signals.length; i++) {
                 this.signals[i].play(this.gain);
             }
 
