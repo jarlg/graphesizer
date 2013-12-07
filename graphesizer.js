@@ -332,7 +332,6 @@ function Graphesizer(canvas) {
                 g.add(signal);
 
                 if (g.playing) {
-                    console.log("graph is playing, so we start ");
                     signal.play(g.gain);
                 }
 
@@ -421,6 +420,7 @@ function Graphesizer(canvas) {
             this.y = y;
             this.context = context;
             this.color = color;
+            this.selected = -1;
 
             this.signals = [];
         },
@@ -434,7 +434,7 @@ function Graphesizer(canvas) {
                 n = this.signals.length;
 
             this.signals.map(function (signal) {
-                var x = this.x + 70 * (i - n /2),
+                var x = this.x + 70 * (i - n / 2) - 35,
                     y = this.y,
                     ctx = this.context,
                     w = 15;
@@ -443,7 +443,7 @@ function Graphesizer(canvas) {
                 ctx.beginPath();
 
                 ctx.strokeStyle = signal.color;
-                ctx.lineWidth = 1;
+                ctx.lineWidth = (this.selected == i) ? 3 : 1;
                 ctx.moveTo(x, y - 7);
                 ctx.lineTo(x+w, y - 7);
                 ctx.closePath();
@@ -568,7 +568,7 @@ function Graphesizer(canvas) {
 
                     if (signal.amplitude <= 0) {
                         this.signals.splice(this.states.selectedSignal, 1);
-                        this.states.selectedSignal = -1;
+                        this.select(-1);
                         this.states.dragging = false;
                     }
                     else {
@@ -586,6 +586,7 @@ function Graphesizer(canvas) {
                     this.states.zoom = this.states.prev_zoom + delta * this.options.zoom_factor;
                     this.resample();
                 }
+
                 this.draw();
             }
             else {
@@ -597,6 +598,8 @@ function Graphesizer(canvas) {
             for (var i = 0; i < this.buttons.length; i++) {
                 this.buttons[i].draw();
             }
+
+            this.display.draw();
         },
 
         updateUI: function (x, y) {
@@ -607,16 +610,17 @@ function Graphesizer(canvas) {
                     this.states.hovering = true;
                 }
             }
-
-            this.display.draw();
         },
 
         select: function (index) {
             this.states.selectedSignal = index;
-            var signal = this.signals[index];
-            signal.stroke_width = 3; // selected signal stroke_width
-            signal.prev_phase = signal.phase;
-            signal.prev_amplitude = signal.amplitude;
+            this.display.selected = index;
+            if (index != -1) {
+                var signal = this.signals[index];
+                signal.stroke_width = 3; // selected signal stroke_width
+                signal.prev_phase = signal.phase;
+                signal.prev_amplitude = signal.amplitude;
+            }
         },
 
         resetSelection: function () {
@@ -640,9 +644,9 @@ function Graphesizer(canvas) {
 
                 var closest = getClosest(x, y, this.signals, this.options.selectThreshold);
 
+                this.select(closest);
                 if (closest != -1) {
                     this.beginDrag(x, y);
-                    this.select(closest);
                 }
                 else { // begin zoom
                     this.states.prev_zoom = this.states.zoom;
