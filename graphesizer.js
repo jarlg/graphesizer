@@ -429,6 +429,10 @@ function Graphesizer(canvas) {
             this.signals.push(signal);
         },
 
+        remove: function (index) {
+            this.signals.splice(index, 1);
+        },
+
         draw: function () {
             var i = 0,
                 n = this.signals.length;
@@ -532,6 +536,8 @@ function Graphesizer(canvas) {
 
             this.display = new Display(this.context, this.width / 2, this.height * 0.9, this.options.colors[7]);
 
+            this.drawZoom();
+
             var self = this;
             canvas.addEventListener('mousemove', function (event) { self.update(event); }, false);
             canvas.addEventListener('mousedown', function (event) { self.onmousedown(event); }, false);
@@ -567,7 +573,8 @@ function Graphesizer(canvas) {
                     signal.modulate(0, signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio) - signal.amplitude);
 
                     if (signal.amplitude <= 0) {
-                        this.signals.splice(this.states.selectedSignal, 1);
+                        this.remove(this.states.selectedSignal);
+
                         this.select(-1);
                         this.states.dragging = false;
                     }
@@ -699,6 +706,11 @@ function Graphesizer(canvas) {
             this.display.add(signal);
         },
 
+        remove: function (index) {
+            this.signals.splice(this.states.selectedSignal, 1);
+            this.display.remove(index);
+        },
+
         /* generates a total wave expression from all signals,
          * based on their modes of interference
          */
@@ -763,6 +775,20 @@ function Graphesizer(canvas) {
             }
 
             this.drawUI();
+            this.drawZoom();
+        },
+
+        drawZoom: function () {
+            var ctx = this.context,
+                margin = 20;
+
+            ctx.textAlign = "right";
+            ctx.font = "36pt Helvetica sans-serif";
+            ctx.textBaseline = "bottom";
+
+            ctx.fillStyle = this.options.colors[7];
+
+            ctx.fillText(this.width / this.states.zoom + "s", this.width - margin, this.height - margin/2);
         },
 
         stop: function (id) {
