@@ -584,12 +584,8 @@ function Graphesizer(canvas) {
                     }
                 }
                 else { // we are draggin canvas
-                    /* not necessarily! this is triggered after deleting a signal by squashing it,
-                     * since we set selectedSignal to -1.
-                     * TODO: fix this, perhaps by modularizing update();
-                     * when dragging canvas, we set update = handleDragCanvas,
-                     * etc. for other update-handlers
-                     */
+                    // this algo/relation is horrible, should be linear or something..
+                    // maybe rather use scroll, not dragging. makes more sense really
                     this.states.zoom = this.states.prev_zoom + delta * this.options.zoom_factor;
                     this.resample();
                 }
@@ -640,11 +636,14 @@ function Graphesizer(canvas) {
             this.states.dragging = true;
             this.states.dragXOrigin = x;
             this.states.dragYOrigin = y;
+            if (this.states.selectedSignal == -1) {
+                this.states.prev_zoom = this.states.zoom;
+            }
         },
 
         onmousedown: function (event) {
             var x = event.clientX,
-            y = event.clientY;
+                y = event.clientY;
 
             if (!this.states.hovering) {
                 this.resetSelection();
@@ -652,12 +651,7 @@ function Graphesizer(canvas) {
                 var closest = getClosest(x, y, this.signals, this.options.selectThreshold);
 
                 this.select(closest);
-                if (closest != -1) {
-                    this.beginDrag(x, y);
-                }
-                else { // begin zoom
-                    this.states.prev_zoom = this.states.zoom;
-                }
+                this.beginDrag(x, y);
                 this.draw();
             }
         },
@@ -788,7 +782,7 @@ function Graphesizer(canvas) {
 
             ctx.fillStyle = this.options.colors[7];
 
-            ctx.fillText(this.width / this.states.zoom + "s", this.width - margin, this.height - margin/2);
+            ctx.fillText((this.width / this.states.zoom).toFixed(3) + "s", this.width - margin, this.height - margin/2);
         },
 
         stop: function (id) {
