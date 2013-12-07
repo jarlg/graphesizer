@@ -410,6 +410,57 @@ function Graphesizer(canvas) {
        },
     });
 
+
+    function Display(context, x, y, color) {
+        return this.init(context, x, y, color);
+    }
+
+    Display.prototype = {
+        init: function (context, x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.context = context;
+            this.color = color;
+
+            this.signals = [];
+        },
+
+        add: function (signal) {
+            this.signals.push(signal);
+        },
+
+        draw: function () {
+            var i = 0,
+                n = this.signals.length;
+
+            this.signals.map(function (signal) {
+                var x = this.x + 70 * (i - n /2),
+                    y = this.y,
+                    ctx = this.context,
+                    w = 15;
+                
+                // draw line
+                ctx.beginPath();
+
+                ctx.strokeStyle = signal.color;
+                ctx.lineWidth = 1;
+                ctx.moveTo(x, y - 7);
+                ctx.lineTo(x+w, y - 7);
+                ctx.closePath();
+
+                ctx.stroke();
+
+                // write frequency
+                ctx.font = "11pt Helvetica";
+                ctx.fillStyle = this.color;
+                ctx.textBaseline = "bottom";
+                ctx.fillText(signal.frequency + "hz", x+w+5, y);
+
+                i++;
+            }, this);
+        }
+    }
+
     /* Graphesizer object takes care of the canvas:
      * drawing signals,
      * handling input,
@@ -429,14 +480,14 @@ function Graphesizer(canvas) {
             zoom_factor: 80,
             play_rate: 30, // fps
 
-            drawExpression: false,
+            drawExpression: true,
             selectThreshold: 60, // px of fuzziness on singal click-selection
 
             defaultSignal: 220,
             colors: ["#d33682", "#dc322f", "#b58900",
             "#6c71c4", "#268bd2", "#2aa198",
             "#859900", "#073642", "#657b83",
-            "#93a1a1"]
+            "#93a1a1"],
         },
 
         states: {
@@ -478,6 +529,8 @@ function Graphesizer(canvas) {
             this.gain = this.aContext.createGain();
             this.gain.gain.value = 1;
             this.gain.connect(this.aContext.destination);
+
+            this.display = new Display(this.context, this.width / 2, this.height * 0.9, this.options.colors[7]);
 
             var self = this;
             canvas.addEventListener('mousemove', function (event) { self.update(event); }, false);
@@ -554,6 +607,8 @@ function Graphesizer(canvas) {
                     this.states.hovering = true;
                 }
             }
+
+            this.display.draw();
         },
 
         select: function (index) {
@@ -624,6 +679,7 @@ function Graphesizer(canvas) {
 
                 this.draw();
             }
+            // else change zoom
         },
 
         getRate: function () {
@@ -636,6 +692,7 @@ function Graphesizer(canvas) {
 
         add: function (signal) {
             this.signals.push(signal);
+            this.display.add(signal);
         },
 
         /* generates a total wave expression from all signals,
