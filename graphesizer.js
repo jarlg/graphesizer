@@ -29,7 +29,9 @@ function Graphesizer(canvas) {
          */
         signal.audio = [];
         for (var x = 0; x < duration; x += rate) {
-            signal.audio.push(signal.amplitude * Math.sin(2 * Math.PI * signal.frequency * x + signal.phase));
+            signal.audio.push(signal.amplitude * 
+                    Math.sin(2 * Math.PI * signal.frequency * x +
+                        signal.phase));
         }
 
         return signal;
@@ -41,7 +43,8 @@ function Graphesizer(canvas) {
         var origo = signal.context.canvas.height / 2;
         signal.curve = [];
         for (var x = 0; x < length; ++x) {
-            signal.curve.push(origo + signal.audio[x] * origo * amp_ratio);
+            signal.curve.push(origo + signal.audio[x] *
+                    origo * amp_ratio);
         }
         return signal;
     }
@@ -65,7 +68,8 @@ function Graphesizer(canvas) {
      * using simple pythagoras d = sqrt(abs(x2-x1)**2 + abs(y2-y1)**2)
      */
     function getDistance(x1, y1, x2, y2) {
-        return Math.sqrt(Math.pow(Math.abs(x2 - x1), 2) + Math.pow(Math.abs(y2 - y1), 2));
+        return Math.sqrt(Math.pow(Math.abs(x2 - x1), 2) +
+                Math.pow(Math.abs(y2 - y1), 2));
     }
 
     /* -> { 1, -1 }
@@ -79,7 +83,6 @@ function Graphesizer(canvas) {
         else if (x == signal.curve.length - 1) {
             return (signal[x] > signal[x-1]) ? 1 : -1;
         }
-        console.log('error in calculation of signal\'s direction in x = ' + x);
         return 0;
     }
 
@@ -162,7 +165,8 @@ function Graphesizer(canvas) {
     */
 
     function Button(context, x, y, width, height, normalColor, hoverColor) {
-        return this.init(context, x, y, width, height, normalColor, hoverColor);
+        return this.init(context, x, y, width,
+                height, normalColor, hoverColor);
     }
 
     Button.prototype = {
@@ -199,7 +203,8 @@ function Graphesizer(canvas) {
          * given a certain fuzzyness/margin.
          */
         hover: function (x, y) {
-            return hover(x, y, this.x, this.y, this.width, this.height, this.fuzzy);
+            return hover(x, y, this.x, this.y,
+                    this.width, this.height, this.fuzzy);
         },
 
         /* -> void
@@ -226,7 +231,8 @@ function Graphesizer(canvas) {
     /* OBJECTS for signals, buttons and graphesizer
     */
     function Signal(aContext, context, frequency, color, stroke_width) {
-        return this.init(aContext, context, frequency, color, stroke_width);
+        return this.init(aContext, context,
+                frequency, color, stroke_width);
     }
 
     Signal.prototype = {
@@ -289,7 +295,8 @@ function Graphesizer(canvas) {
         },
 
         draw: function () {
-            drawCurve(this.context, 0, this.curve, this.color, this.stroke_width);
+            drawCurve(this.context, 0, this.curve,
+                    this.color, this.stroke_width);
         },
     };
 
@@ -305,13 +312,15 @@ function Graphesizer(canvas) {
          */
         draw:  { // override inherited draw
             value: function () {
-                var y1 = this.y + Math.floor(this.height / 2) - Math.floor(this.thickness / 2);
+                var y1 = this.y + Math.floor(this.height / 2) -
+                            Math.floor(this.thickness / 2);
                 this.context.fillStyle = this.color;
                 this.context.fillRect(this.x,
                     y1,
                     this.width,
                     this.thickness);
-                var x1 = this.x + Math.floor(this.width / 2) - Math.floor(this.thickness / 2);
+                var x1 = this.x + Math.floor(this.width / 2) -
+                            Math.floor(this.thickness / 2);
                 this.context.fillRect(x1,
                     this.y,
                     this.thickness,
@@ -347,7 +356,8 @@ function Graphesizer(canvas) {
     /* play button for controlling playback of sound and
      * movement of signals. on/off
      */
-    function PlayButton(context, x, y, width, height, normalColor, hoverColor) {
+    function PlayButton(context, x, y, width,
+                        height, normalColor, hoverColor) {
         this.playing = false;
         this.playID = 0;
         Button.apply(this, arguments);
@@ -365,7 +375,8 @@ function Graphesizer(canvas) {
 
                     ctx.moveTo(this.x, this.y);
                     ctx.lineTo(this.x, this.y + this.height);
-                    ctx.lineTo(this.x + this.width, this.y + (this.height / 2));
+                    ctx.lineTo(this.x + this.width,
+                                this.y + (this.height / 2));
                     ctx.lineTo(this.x, this.y);
 
                     ctx.closePath();
@@ -441,15 +452,17 @@ function Graphesizer(canvas) {
                 var x = this.x + 70 * (i - n / 2) - 35,
                     y = this.y,
                     ctx = this.context,
-                    w = 15;
+                    f = Math.abs(signal.frequency),
+                    w = (f < 100) ? 32 : 
+                            (f < 1000) ? 41 : 49;
                 
                 // draw line
                 ctx.beginPath();
 
                 ctx.strokeStyle = signal.color;
                 ctx.lineWidth = (this.selected == i) ? 3 : 1;
-                ctx.moveTo(x, y - 7);
-                ctx.lineTo(x+w, y - 7);
+                ctx.moveTo(x, y);
+                ctx.lineTo(x+w, y);
                 ctx.closePath();
 
                 ctx.stroke();
@@ -458,7 +471,7 @@ function Graphesizer(canvas) {
                 ctx.font = "11pt Helvetica";
                 ctx.fillStyle = this.color;
                 ctx.textBaseline = "bottom";
-                ctx.fillText(signal.frequency + "hz", x+w+5, y);
+                ctx.fillText(f + "hz", x, y);
 
                 i++;
             }, this);
@@ -507,7 +520,8 @@ function Graphesizer(canvas) {
             this.context = canvas.getContext("2d");
 
             try {
-                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                window.AudioContext = window.AudioContext ||
+                                        window.webkitAudioContext;
                 this.aContext = new AudioContext();
             }
             catch (e) {
@@ -527,22 +541,41 @@ function Graphesizer(canvas) {
             this.curve = [];
             this.buttons = [];
 
-            this.buttons.push(new AddButton(this.context, 30, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
-            this.buttons.push(new PlayButton(this.context, 100, 30, 40, 40, this.options.buttonColor, this.options.buttonHoverColor));
+            this.buttons.push(new AddButton(this.context,
+                                             30, 30, 40, 40,
+                                             this.options.buttonColor,
+                                             this.options.buttonHoverColor));
+            this.buttons.push(new PlayButton(this.context,
+                                             100, 30, 40, 40,
+                                             this.options.buttonColor,
+                                             this.options.buttonHoverColor));
 
             this.gain = this.aContext.createGain();
             this.gain.gain.value = 1;
             this.gain.connect(this.aContext.destination);
 
-            this.display = new Display(this.context, this.width / 2, this.height * 0.9, this.options.colors[7]);
+            this.display = new Display(this.context, this.width / 2,
+                    this.height * 0.9, this.options.colors[7]);
 
             this.drawZoom();
 
             var self = this;
-            canvas.addEventListener('mousemove', function (event) { self.update(event); }, false);
-            canvas.addEventListener('mousedown', function (event) { self.onmousedown(event); }, false);
-            canvas.addEventListener('mouseup', function (event) { self.onmouseup(event); }, false);
-            canvas.addEventListener('mousewheel', function (event) { self.onmousewheel(event); }, false);
+
+            canvas.addEventListener('mousemove', function (event) {
+                self.update(event); 
+            }, false);
+
+            canvas.addEventListener('mousedown', function (event) {
+                self.onmousedown(event); 
+            }, false);
+
+            canvas.addEventListener('mouseup', function (event) {
+                self.onmouseup(event); 
+            }, false);
+
+            canvas.addEventListener('mousewheel', function (event) {
+                self.onmousewheel(event); 
+            }, false);
         },
 
         clear: function () {
@@ -566,11 +599,16 @@ function Graphesizer(canvas) {
                     var signal = this.signals[this.states.selectedSignal];
 
                     // x - dephase
-                    signal.dephase(signal.prev_phase + (delta / this.states.zoom) * 2 * Math.PI * signal.frequency * -1);
+                    signal.dephase(signal.prev_phase 
+                            + (delta / this.states.zoom)
+                            * 2 * Math.PI * signal.frequency * -1);
 
                     // y - amplify
                     delta = (y - this.states.dragYOrigin);
-                    signal.modulate(0, signal.prev_amplitude - 2 * delta / (this.height * this.options.amplitude_ratio) - signal.amplitude);
+                    signal.modulate(0, signal.prev_amplitude 
+                            - 2 * delta 
+                            / (this.height * this.options.amplitude_ratio) 
+                            - signal.amplitude);
 
                     if (signal.amplitude <= 0) {
                         this.remove(this.states.selectedSignal);
@@ -777,7 +815,7 @@ function Graphesizer(canvas) {
                 margin = 20;
 
             ctx.textAlign = "right";
-            ctx.font = "36pt Helvetica sans-serif";
+            ctx.font = "36pt Helvetica";
             ctx.textBaseline = "bottom";
 
             ctx.fillStyle = this.options.colors[7];
