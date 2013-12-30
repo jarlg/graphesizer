@@ -816,10 +816,10 @@ function Graphesizer(canvas) {
                 margin = 20;
 
             ctx.textAlign = "right";
-            ctx.font = "36pt Helvetica";
+            ctx.font = "normal lighter 32pt Helvetica";
             ctx.textBaseline = "bottom";
 
-            ctx.fillStyle = this.options.colors[7];
+            ctx.fillStyle = this.options.buttonColor;
 
             ctx.fillText((this.width / this.states.zoom).toFixed(3) + "s", this.width - margin, this.height - margin/2);
         },
