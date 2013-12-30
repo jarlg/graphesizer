@@ -622,12 +622,6 @@ function Graphesizer(canvas) {
                                 this.getDuration());
                     }
                 }
-                else { // we are draggin canvas
-                    // this algo/relation is horrible, should be linear or something..
-                    // maybe rather use scroll, not dragging. makes more sense really
-                    this.states.zoom = this.states.prev_zoom + delta * this.options.zoom_factor;
-                    this.resample();
-                }
 
                 this.draw();
             }
@@ -712,18 +706,20 @@ function Graphesizer(canvas) {
 
         onmousewheel: function (event) {
             event.preventDefault();
+            var delta = event.wheelDeltaY;
 
             if (this.states.selectedSignal != -1) {
-                var delta = event.wheelDeltaY,
-                    signal = this.signals[this.states.selectedSignal];
+                var signal = this.signals[this.states.selectedSignal];
 
                 signal.modulate(delta, 0);
                 signal.sample(this.getRate(),
                         this.getDuration());
-
-                this.draw();
             }
-            // else change zoom
+            else {
+                this.states.zoom += delta * this.options.zoom_factor;
+                this.resample();
+            }
+            this.draw();
         },
 
         getRate: function () {
