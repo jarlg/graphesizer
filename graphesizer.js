@@ -488,6 +488,7 @@ function Graphesizer(canvas) {
         options: {
             buttonColor: "#657b83",
             buttonHoverColor: "#002b36",
+            waveSumColor: "#eee8d5",
 
             /* signal of amplitude 1 goes 1/3 of the way from
              * x-axis to top of screen
@@ -788,7 +789,7 @@ function Graphesizer(canvas) {
 
         drawExpression: function () {
             if (this.signals.length > 1) {
-                drawCurve(this.context, 0, this.curve, this.options.colors[7], 4); // 4 is stroke width, 7 is a good color
+                drawCurve(this.context, 0, this.curve, this.options.waveSumColor, 4);
             }
         },
 
