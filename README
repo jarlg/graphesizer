@@ -1,0 +1,7 @@
+### fnsmplr
+
+bundle mathjs:
+``` browserify -r mathjs > dist/js/math.js ```
+
+livereload server with browserify rebuilds:
+``` gulp watch ```

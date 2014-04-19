@@ -1,0 +1,33 @@
+BUGS
+    * sometimes sounds stay in the system, make sure to always turn them off
+    (removed by silencing when changing signals; perhaps not ideal)
+    * pressing space -> jumps down page (fix: max-height: 100vh; on sidebar?)
+
+FUNCTIONALITY
+    * REFACTOR
+    * onscroll for zoom (improve algo!)
+    -> shouldn't be able to zoom into negative
+
+LAYOUT
+    *? center shit
+
+UX
+    * onclick of signals in sidebar should give focus
+    *? onclick of canvas to select nearest signal
+    *? drag signal to increase amplitude and dephase
+    * place x origin (dblclick? mousedown + space?)
+    * fit sample window (mousedown + dragging + space)
+        -> bring outernmost point of selection window to edge
+        -> better zoom algo
+
+DESIGN
+    * Georgia is not perfect (ex. too big parens)
+    * color each entry of sidebar to color of signal
+    * structure sidebar entries of signals
+    * expanding input box (max-width, expand)
+
+SOUND
+    * "smartboxing" of user selected sample area, to fit better to signal
+
+IDEAS
+    * mirror sample area around an x value (highest x value)
