@@ -35,8 +35,9 @@ class Sidebar
         @
 
     add: (signal) ->
+        @signalList.insertBefore(@makeEntry(signal), @signalList.firstChild)
         @signals.push(signal)
-        @signalList.appendChild(@makeEntry(signal))
+        @
 
     makeEntry: (signal) ->
         entry = document.createElement('li')
@@ -52,13 +53,6 @@ class Sidebar
             .className = 'sidebar-signal-toggle'
         entry.className = 'sidebar-signal'
         entry
-
-
-    render: () ->
-        for signal in @signals
-            do (signal) =>
-                @signalList.appendChild(@makeEntry(signal))
-        @
 
 
 module.exports = Sidebar

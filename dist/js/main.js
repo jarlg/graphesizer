@@ -244,8 +244,9 @@ Sidebar = (function() {
   };
 
   Sidebar.prototype.add = function(signal) {
+    this.signalList.insertBefore(this.makeEntry(signal), this.signalList.firstChild);
     this.signals.push(signal);
-    return this.signalList.appendChild(this.makeEntry(signal));
+    return this;
   };
 
   Sidebar.prototype.makeEntry = function(signal) {
@@ -260,21 +261,6 @@ Sidebar = (function() {
     entry.appendChild(toggles).className = 'sidebar-signal-toggle';
     entry.className = 'sidebar-signal';
     return entry;
-  };
-
-  Sidebar.prototype.render = function() {
-    var signal, _fn, _i, _len, _ref;
-    _ref = this.signals;
-    _fn = (function(_this) {
-      return function(signal) {
-        return _this.signalList.appendChild(_this.makeEntry(signal));
-      };
-    })(this);
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      signal = _ref[_i];
-      _fn(signal);
-    }
-    return this;
   };
 
   return Sidebar;
