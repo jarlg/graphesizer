@@ -1,7 +1,6 @@
 BUGS
     * sometimes sounds stay in the system, make sure to always turn them off
     (removed by silencing when changing signals; perhaps not ideal)
-    * pressing space -> jumps down page (fix: max-height: 100vh; on sidebar?)
 
 FUNCTIONALITY
     * REFACTOR
