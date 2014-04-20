@@ -14,9 +14,7 @@ class Sidebar
 
     bindButton: (@button) ->
         @button.innerHTML = if @hidden then ">>" else "<<"
-        @button.addEventListener('click', (event) =>
-            @toggle()
-        )
+        @button.addEventListener('click', ( (event) => @toggle() ))
 
     toggle: () ->
         @hidden = not @hidden
