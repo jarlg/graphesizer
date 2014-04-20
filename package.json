@@ -8,20 +8,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/giraj/funksmplr.git"
+    "url": "github.com/giraj/graphesizer.git"
   },
   "keywords": [
     "math",
     "sound",
     "synth",
-    "funk"
+    "funk",
+    "graph",
+    "graphesizer"
   ],
   "author": "giraj",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/giraj/funksmplr/issues"
+    "url": "https://github.com/giraj/graphesizer/issues"
   },
-  "homepage": "https://giraj.github.io/funksmplr",
+  "homepage": "https://giraj.github.io/graphesizer",
   "devDependencies": {
     "gulp": "^3.5.5",
     "gulp-concat": "^2.1.7",
