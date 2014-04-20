@@ -198,14 +198,14 @@ module.exports = App;
 var Sidebar;
 
 Sidebar = (function() {
-  function Sidebar(el, width, hidden) {
-    this.el = el;
+  function Sidebar(sidebar, width, hidden) {
+    this.sidebar = sidebar;
     this.width = width;
     this.hidden = hidden != null ? hidden : true;
     this.signals = [];
-    this.el.style.width = this.width + "px";
+    this.sidebar.style.width = this.width + "px";
     this.signalList = document.createElement('ul');
-    this.el.appendChild(this.signalList).className = "sidebar-signal-list";
+    this.sidebar.appendChild(this.signalList).className = "sidebar-signal-list";
     if (this.hidden) {
       this.hide();
     } else {
@@ -234,18 +234,19 @@ Sidebar = (function() {
   };
 
   Sidebar.prototype.show = function() {
-    this.el.style.left = 0 + "px";
+    this.sidebar.style.left = 0 + "px";
     return this;
   };
 
   Sidebar.prototype.hide = function() {
-    this.el.style.left = (55 - this.width) + "px";
+    this.sidebar.style.left = (55 - this.width) + "px";
     return this;
   };
 
   Sidebar.prototype.add = function(signal) {
+    this.signalList.insertBefore(this.makeEntry(signal), this.signalList.firstChild);
     this.signals.push(signal);
-    return this.signalList.appendChild(this.makeEntry(signal));
+    return this;
   };
 
   Sidebar.prototype.makeEntry = function(signal) {
@@ -260,21 +261,6 @@ Sidebar = (function() {
     entry.appendChild(toggles).className = 'sidebar-signal-toggle';
     entry.className = 'sidebar-signal';
     return entry;
-  };
-
-  Sidebar.prototype.render = function() {
-    var signal, _fn, _i, _len, _ref;
-    _ref = this.signals;
-    _fn = (function(_this) {
-      return function(signal) {
-        return _this.signalList.appendChild(_this.makeEntry(signal));
-      };
-    })(this);
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      signal = _ref[_i];
-      _fn(signal);
-    }
-    return this;
   };
 
   return Sidebar;
