@@ -1,4 +1,5 @@
-### graphesizer
+graphesizer
+===========
 
 sounds through graphs
 
@@ -7,3 +8,5 @@ bundle mathjs:
 
 livereload server with browserify rebuilds:
 ``` gulp watch ```
+
+project by Oysteinkn and Giraj
