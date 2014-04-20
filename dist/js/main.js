@@ -198,14 +198,14 @@ module.exports = App;
 var Sidebar;
 
 Sidebar = (function() {
-  function Sidebar(el, width, hidden) {
-    this.el = el;
+  function Sidebar(sidebar, width, hidden) {
+    this.sidebar = sidebar;
     this.width = width;
     this.hidden = hidden != null ? hidden : true;
     this.signals = [];
-    this.el.style.width = this.width + "px";
+    this.sidebar.style.width = this.width + "px";
     this.signalList = document.createElement('ul');
-    this.el.appendChild(this.signalList).className = "sidebar-signal-list";
+    this.sidebar.appendChild(this.signalList).className = "sidebar-signal-list";
     if (this.hidden) {
       this.hide();
     } else {
@@ -234,12 +234,12 @@ Sidebar = (function() {
   };
 
   Sidebar.prototype.show = function() {
-    this.el.style.left = 0 + "px";
+    this.sidebar.style.left = 0 + "px";
     return this;
   };
 
   Sidebar.prototype.hide = function() {
-    this.el.style.left = (55 - this.width) + "px";
+    this.sidebar.style.left = (55 - this.width) + "px";
     return this;
   };
 

@@ -1,11 +1,11 @@
 "use strict"
 
 class Sidebar
-    constructor: (@el, @width, @hidden=true) ->
+    constructor: (@sidebar, @width, @hidden=true) ->
         @signals = []
-        @el.style.width = @width + "px"
+        @sidebar.style.width = @width + "px"
         @signalList = document.createElement('ul')
-        @el.appendChild(@signalList)
+        @sidebar.appendChild(@signalList)
             .className = "sidebar-signal-list"
         if @hidden
             @hide()
@@ -27,11 +27,11 @@ class Sidebar
             @show()
 
     show: () ->
-        @el.style.left = 0 + "px"
+        @sidebar.style.left = 0 + "px"
         @
 
     hide: () ->
-        @el.style.left = (55 - @width) + "px"
+        @sidebar.style.left = (55 - @width) + "px"
         @
 
     add: (signal) ->
