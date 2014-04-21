@@ -133,7 +133,7 @@ App = (function() {
   };
 
   App.prototype.drawSelectionIndicators = function() {
-    var fromX, lMargin, leftOffset, rMargin, rightOffset, toX;
+    var fromX, fromY, lMargin, leftOffset, rMargin, rightOffset, toX, toY;
     this.ctx.font = "20pt Georgia";
     this.ctx.fillStyle = "#586e75";
     leftOffset = -95;
@@ -149,12 +149,24 @@ App = (function() {
     if (this.currentSignal.window.from < this.currentSignal.window.to) {
       fromX += fromX > lMargin ? leftOffset : rightOffset;
       toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
+      if (toX - fromX < 80) {
+        toY = 60;
+      } else {
+        toY = 30;
+      }
+      fromY = 30;
     } else {
       fromX += window.innerWidth - fromX > rMargin ? rightOffset : leftOffset;
       toX += toX > lMargin ? leftOffset : rightOffset;
+      if (fromX - toX < 80) {
+        fromY = 60;
+      } else {
+        fromY = 30;
+      }
+      toY = 30;
     }
-    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', fromX, 30);
-    this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', toX, 30);
+    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', fromX, fromY);
+    this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', toX, toY);
     return this;
   };
 

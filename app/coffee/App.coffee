@@ -118,15 +118,19 @@ class App
             # if close to sides of screen draw inside selection
             fromX += if fromX > lMargin then leftOffset else rightOffset
             toX   += if window.innerWidth - toX > rMargin then rightOffset else leftOffset
+            if toX - fromX < 80 then toY = 60 else toY = 30
+            fromY = 30
         else # reverse roles
             fromX += if window.innerWidth - fromX > rMargin then rightOffset else leftOffset
             toX += if toX > lMargin then leftOffset else rightOffset
+            if fromX - toX < 80 then fromY = 60 else fromY = 30
+            toY = 30
         @ctx.fillText( @currentSignal.window.from.toFixed(2) + 's'
                      , fromX
-                     , 30)
+                     , fromY)
         @ctx.fillText( @currentSignal.window.to.toFixed(2) + 's'
                      , toX
-                     , 30)
+                     , toY)
         @
 
     drawEdgeIndicator: () ->
