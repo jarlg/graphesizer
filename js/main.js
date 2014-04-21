@@ -35,6 +35,11 @@ App = (function() {
         return _this.scrollHandler(event);
       };
     })(this)));
+    this.canvas.addEventListener('keydown', ((function(_this) {
+      return function(event) {
+        return _this.keydownHandler(event);
+      };
+    })(this)));
     this.initGain();
   }
 
@@ -97,7 +102,19 @@ App = (function() {
     }
     this.ctx.stroke();
     this.ctx.closePath();
-    return this.drawSelection();
+    this.drawOrigoIndicator();
+    this.drawSelection();
+    return this.drawEdgeIndicator();
+  };
+
+  App.prototype.drawOrigoIndicator = function() {
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = "#93a1a1";
+    this.ctx.moveTo(this.origoX, 0);
+    this.ctx.lineTo(this.origoX, 25);
+    this.ctx.stroke();
+    this.ctx.closePath();
+    return this;
   };
 
   App.prototype.drawSelection = function() {
@@ -121,18 +138,48 @@ App = (function() {
   };
 
   App.prototype.drawSelectionIndicators = function() {
-    var offset1, offset2;
+    var fromX, fromY, lMargin, leftOffset, rMargin, rightOffset, toX, toY;
     this.ctx.font = "20pt Georgia";
     this.ctx.fillStyle = "#586e75";
-    if (this.currentSignal.window.from < this.currentSignal.window.to) {
-      offset1 = -95;
-      offset2 = 20;
+    leftOffset = -95;
+    rightOffset = 20;
+    if (this.sidebar != null) {
+      lMargin = this.sidebar.hidden ? 150 : 350;
     } else {
-      offset1 = 20;
-      offset2 = -95;
+      lMargin = 100;
     }
-    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', this.secondsToGraphX(this.currentSignal.window.from) + offset1, 30);
-    return this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', this.secondsToGraphX(this.currentSignal.window.to) + offset2, 30);
+    rMargin = 100;
+    fromX = this.secondsToGraphX(this.currentSignal.window.from);
+    toX = this.secondsToGraphX(this.currentSignal.window.to);
+    if (this.currentSignal.window.from < this.currentSignal.window.to) {
+      fromX += fromX > lMargin ? leftOffset : rightOffset;
+      toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
+      if (toX - fromX < 80) {
+        toY = 60;
+      } else {
+        toY = 30;
+      }
+      fromY = 30;
+    } else {
+      fromX += window.innerWidth - fromX > rMargin ? rightOffset : leftOffset;
+      toX += toX > lMargin ? leftOffset : rightOffset;
+      if (fromX - toX < 80) {
+        fromY = 60;
+      } else {
+        fromY = 30;
+      }
+      toY = 30;
+    }
+    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', fromX, fromY);
+    this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', toX, toY);
+    return this;
+  };
+
+  App.prototype.drawEdgeIndicator = function() {
+    this.ctx.font = "20pt Georgia";
+    this.ctx.fillStyle = "#586e75";
+    this.ctx.fillText(this.graphXToSeconds(window.innerWidth).toFixed(1) + 's', window.innerWidth - 80, window.innerHeight - 20);
+    return this;
   };
 
   App.prototype.secondsToGraphX = function(s) {
@@ -141,6 +188,36 @@ App = (function() {
 
   App.prototype.graphXToSeconds = function(x) {
     return (x - this.origoX) * this.zoom / this.canvas.width;
+  };
+
+  App.prototype.keydownHandler = function(event) {
+    if ((this.currentSignal != null) && event.keyCode === 32) {
+      if (Math.abs(this.currentSignal.window.from) < Math.abs(this.currentSignal.window.to)) {
+        this.zoomFitToEdge(this.currentSignal.window.to);
+      } else {
+        this.zoomFitToEdge(this.currentSignal.window.from);
+      }
+      this.draw();
+    }
+    return this;
+  };
+
+  App.prototype.zoomFitToEdge = function(s) {
+    this.zoom = s * this.canvas.width;
+    if (s > 0) {
+      this.zoom /= window.innerWidth - this.origoX;
+    } else if (s < 0) {
+      if (this.sidebar != null) {
+        if (this.sidebar.hidden) {
+          this.zoom /= this.sidebar.hiddenWidth - this.origoX;
+        } else {
+          this.zoom /= this.sidebar.width - this.origoX;
+        }
+      } else {
+        this.zoom /= -this.origoX;
+      }
+    }
+    return this;
   };
 
   App.prototype.mousedownHandler = function(event) {
@@ -152,12 +229,14 @@ App = (function() {
   };
 
   App.prototype.mouseupHandler = function(event) {
-    if (this.dragging) {
-      this.dragging = false;
-      this.canvas.onmousemove = null;
-      this.endDrag(event);
+    if (this.currentSignal != null) {
+      if (this.dragging) {
+        this.dragging = false;
+        this.canvas.onmousemove = null;
+        this.endDrag(event);
+      }
+      this.currentSignal.play(this.audioCtx, this.gain);
     }
-    this.currentSignal.play(this.audioCtx, this.gain);
     return this;
   };
 
@@ -206,6 +285,7 @@ Sidebar = (function() {
     this.sidebar.style.width = this.width + "px";
     this.signalList = document.createElement('ul');
     this.sidebar.appendChild(this.signalList).className = "sidebar-signal-list";
+    this.hiddenWidth = 55;
     if (this.hidden) {
       this.hide();
     } else {
@@ -216,11 +296,11 @@ Sidebar = (function() {
   Sidebar.prototype.bindButton = function(button) {
     this.button = button;
     this.button.innerHTML = this.hidden ? ">>" : "<<";
-    return this.button.addEventListener('click', (function(_this) {
+    return this.button.addEventListener('click', ((function(_this) {
       return function(event) {
         return _this.toggle();
       };
-    })(this));
+    })(this)));
   };
 
   Sidebar.prototype.toggle = function() {
@@ -239,7 +319,7 @@ Sidebar = (function() {
   };
 
   Sidebar.prototype.hide = function() {
-    this.sidebar.style.left = (55 - this.width) + "px";
+    this.sidebar.style.left = (this.hiddenWidth - this.width) + "px";
     return this;
   };
 
