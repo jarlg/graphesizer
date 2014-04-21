@@ -97,7 +97,18 @@ App = (function() {
     }
     this.ctx.stroke();
     this.ctx.closePath();
+    this.drawOrigoIndicator();
     return this.drawSelection();
+  };
+
+  App.prototype.drawOrigoIndicator = function() {
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = "#93a1a1";
+    this.ctx.moveTo(this.origoX, 0);
+    this.ctx.lineTo(this.origoX, 25);
+    this.ctx.stroke();
+    this.ctx.closePath();
+    return this;
   };
 
   App.prototype.drawSelection = function() {

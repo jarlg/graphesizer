@@ -69,7 +69,17 @@ class App
                 @ctx.lineTo(i, @yZoom * expr.eval(scope) + @origoY)
         @ctx.stroke()
         @ctx.closePath()
+        @drawOrigoIndicator()
         @drawSelection()
+
+    drawOrigoIndicator: () ->
+        @ctx.beginPath()
+        @ctx.strokeStyle = "#93a1a1"
+        @ctx.moveTo(@origoX, 0)
+        @ctx.lineTo(@origoX, 25)
+        @ctx.stroke()
+        @ctx.closePath()
+        @
 
     drawSelection: () ->
         from = @currentSignal.window.from
