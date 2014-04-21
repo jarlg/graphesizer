@@ -238,11 +238,11 @@ Sidebar = (function() {
   Sidebar.prototype.bindButton = function(button) {
     this.button = button;
     this.button.innerHTML = this.hidden ? ">>" : "<<";
-    return this.button.addEventListener('click', (function(_this) {
+    return this.button.addEventListener('click', ((function(_this) {
       return function(event) {
         return _this.toggle();
       };
-    })(this));
+    })(this)));
   };
 
   Sidebar.prototype.toggle = function() {
