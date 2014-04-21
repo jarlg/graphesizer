@@ -35,7 +35,7 @@ App = (function() {
         return _this.scrollHandler(event);
       };
     })(this)));
-    window.addEventListener('keydown', ((function(_this) {
+    this.canvas.addEventListener('keydown', ((function(_this) {
       return function(event) {
         return _this.keydownHandler(event);
       };

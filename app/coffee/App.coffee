@@ -22,7 +22,7 @@ class App
         @canvas.addEventListener('mousedown',  ( (event) => @mousedownHandler(event) ))
         @canvas.addEventListener('mouseup',    ( (event) => @mouseupHandler(event) ))
         @canvas.addEventListener('mousewheel', ( (event) => @scrollHandler(event) ))
-        window.addEventListener('keydown',     ( (event) => @keydownHandler(event) ))
+        @canvas.addEventListener('keydown',    ( (event) => @keydownHandler(event) ))
 
         @initGain()
 
