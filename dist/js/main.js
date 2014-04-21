@@ -98,7 +98,8 @@ App = (function() {
     this.ctx.stroke();
     this.ctx.closePath();
     this.drawOrigoIndicator();
-    return this.drawSelection();
+    this.drawSelection();
+    return this.drawEdgeIndicator();
   };
 
   App.prototype.drawOrigoIndicator = function() {
@@ -154,6 +155,13 @@ App = (function() {
     }
     this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', fromX, 30);
     this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', toX, 30);
+    return this;
+  };
+
+  App.prototype.drawEdgeIndicator = function() {
+    this.ctx.font = "20pt Georgia";
+    this.ctx.fillStyle = "#586e75";
+    this.ctx.fillText(this.graphXToSeconds(window.innerWidth).toFixed(1) + 's', window.innerWidth - 80, window.innerHeight - 20);
     return this;
   };
 

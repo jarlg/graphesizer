@@ -71,6 +71,7 @@ class App
         @ctx.closePath()
         @drawOrigoIndicator()
         @drawSelection()
+        @drawEdgeIndicator()
 
     drawOrigoIndicator: () ->
         @ctx.beginPath()
@@ -127,6 +128,15 @@ class App
                      , toX
                      , 30)
         @
+
+    drawEdgeIndicator: () ->
+        @ctx.font = "20pt Georgia"
+        @ctx.fillStyle = "#586e75"
+        @ctx.fillText( @graphXToSeconds(window.innerWidth).toFixed(1) + 's'
+                     , window.innerWidth - 80
+                     , window.innerHeight - 20)
+        @
+
 
     secondsToGraphX: (s) ->
         ((s * @canvas.width) / @zoom) + @origoX
