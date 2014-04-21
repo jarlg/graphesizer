@@ -132,18 +132,29 @@ App = (function() {
   };
 
   App.prototype.drawSelectionIndicators = function() {
-    var offset1, offset2;
+    var fromX, lMargin, leftOffset, rMargin, rightOffset, toX;
     this.ctx.font = "20pt Georgia";
     this.ctx.fillStyle = "#586e75";
-    if (this.currentSignal.window.from < this.currentSignal.window.to) {
-      offset1 = -95;
-      offset2 = 20;
+    leftOffset = -95;
+    rightOffset = 20;
+    if (this.sidebar != null) {
+      lMargin = this.sidebar.hidden ? 150 : 350;
     } else {
-      offset1 = 20;
-      offset2 = -95;
+      lMargin = 100;
     }
-    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', this.secondsToGraphX(this.currentSignal.window.from) + offset1, 30);
-    return this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', this.secondsToGraphX(this.currentSignal.window.to) + offset2, 30);
+    rMargin = 100;
+    fromX = this.secondsToGraphX(this.currentSignal.window.from);
+    toX = this.secondsToGraphX(this.currentSignal.window.to);
+    if (this.currentSignal.window.from < this.currentSignal.window.to) {
+      fromX += fromX > lMargin ? leftOffset : rightOffset;
+      toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
+    } else {
+      fromX += window.innerWidth - fromX > rMargin ? rightOffset : leftOffset;
+      toX += toX > lMargin ? leftOffset : rightOffset;
+    }
+    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', fromX, 30);
+    this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', toX, 30);
+    return this;
   };
 
   App.prototype.secondsToGraphX = function(s) {

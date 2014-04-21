@@ -104,18 +104,29 @@ class App
     drawSelectionIndicators: () ->
         @ctx.font = "20pt Georgia"
         @ctx.fillStyle = "#586e75"
-        if @currentSignal.window.from < @currentSignal.window.to
-            offset1 = -95
-            offset2 = 20
+        leftOffset = -95
+        rightOffset = 20
+        if @sidebar?
+            lMargin = if @sidebar.hidden then 150 else 350
         else
-            offset1 = 20
-            offset2 = -95
+            lMargin = 100
+        rMargin = 100
+        fromX = @secondsToGraphX(@currentSignal.window.from)
+        toX   = @secondsToGraphX(@currentSignal.window.to)
+        if @currentSignal.window.from < @currentSignal.window.to
+            # if close to sides of screen draw inside selection
+            fromX += if fromX > lMargin then leftOffset else rightOffset
+            toX   += if window.innerWidth - toX > rMargin then rightOffset else leftOffset
+        else # reverse roles
+            fromX += if window.innerWidth - fromX > rMargin then rightOffset else leftOffset
+            toX += if toX > lMargin then leftOffset else rightOffset
         @ctx.fillText( @currentSignal.window.from.toFixed(2) + 's'
-                     , @secondsToGraphX(@currentSignal.window.from) + offset1
+                     , fromX
                      , 30)
         @ctx.fillText( @currentSignal.window.to.toFixed(2) + 's'
-                     , @secondsToGraphX(@currentSignal.window.to) + offset2
+                     , toX
                      , 30)
+        @
 
     secondsToGraphX: (s) ->
         ((s * @canvas.width) / @zoom) + @origoX
