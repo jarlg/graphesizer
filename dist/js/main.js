@@ -35,6 +35,11 @@ App = (function() {
         return _this.scrollHandler(event);
       };
     })(this)));
+    window.addEventListener('keydown', ((function(_this) {
+      return function(event) {
+        return _this.keydownHandler(event);
+      };
+    })(this)));
     this.initGain();
   }
 
@@ -185,6 +190,36 @@ App = (function() {
     return (x - this.origoX) * this.zoom / this.canvas.width;
   };
 
+  App.prototype.keydownHandler = function(event) {
+    if ((this.currentSignal != null) && event.keyCode === 32) {
+      if (Math.abs(this.currentSignal.window.from) < Math.abs(this.currentSignal.window.to)) {
+        this.zoomFitToEdge(this.currentSignal.window.to);
+      } else {
+        this.zoomFitToEdge(this.currentSignal.window.from);
+      }
+      this.draw();
+    }
+    return this;
+  };
+
+  App.prototype.zoomFitToEdge = function(s) {
+    this.zoom = s * this.canvas.width;
+    if (s > 0) {
+      this.zoom /= window.innerWidth - this.origoX;
+    } else if (s < 0) {
+      if (this.sidebar != null) {
+        if (this.sidebar.hidden) {
+          this.zoom /= this.sidebar.hiddenWidth - this.origoX;
+        } else {
+          this.zoom /= this.sidebar.width - this.origoX;
+        }
+      } else {
+        this.zoom /= -this.origoX;
+      }
+    }
+    return this;
+  };
+
   App.prototype.mousedownHandler = function(event) {
     if (this.currentSignal != null) {
       this.dragging = true;
@@ -194,12 +229,14 @@ App = (function() {
   };
 
   App.prototype.mouseupHandler = function(event) {
-    if (this.dragging) {
-      this.dragging = false;
-      this.canvas.onmousemove = null;
-      this.endDrag(event);
+    if (this.currentSignal != null) {
+      if (this.dragging) {
+        this.dragging = false;
+        this.canvas.onmousemove = null;
+        this.endDrag(event);
+      }
+      this.currentSignal.play(this.audioCtx, this.gain);
     }
-    this.currentSignal.play(this.audioCtx, this.gain);
     return this;
   };
 
@@ -248,6 +285,7 @@ Sidebar = (function() {
     this.sidebar.style.width = this.width + "px";
     this.signalList = document.createElement('ul');
     this.sidebar.appendChild(this.signalList).className = "sidebar-signal-list";
+    this.hiddenWidth = 55;
     if (this.hidden) {
       this.hide();
     } else {
@@ -281,7 +319,7 @@ Sidebar = (function() {
   };
 
   Sidebar.prototype.hide = function() {
-    this.sidebar.style.left = (55 - this.width) + "px";
+    this.sidebar.style.left = (this.hiddenWidth - this.width) + "px";
     return this;
   };
 

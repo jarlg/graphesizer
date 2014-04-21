@@ -22,6 +22,7 @@ class App
         @canvas.addEventListener('mousedown',  ( (event) => @mousedownHandler(event) ))
         @canvas.addEventListener('mouseup',    ( (event) => @mouseupHandler(event) ))
         @canvas.addEventListener('mousewheel', ( (event) => @scrollHandler(event) ))
+        window.addEventListener('keydown',     ( (event) => @keydownHandler(event) ))
 
         @initGain()
 
@@ -148,6 +149,30 @@ class App
     graphXToSeconds: (x) ->
         (x - @origoX) * @zoom / @canvas.width
 
+    keydownHandler: (event) ->
+        if @currentSignal? and event.keyCode == 32 #spacebar
+            if Math.abs(@currentSignal.window.from) < Math.abs(@currentSignal.window.to)
+                @zoomFitToEdge(@currentSignal.window.to)
+            else
+                @zoomFitToEdge(@currentSignal.window.from)
+            @draw()
+        @
+
+    zoomFitToEdge: (s) ->
+        @zoom = s * @canvas.width
+        if s > 0
+            @zoom /= (window.innerWidth - @origoX)
+        else if s < 0
+            if @sidebar?
+                if @sidebar.hidden
+                    @zoom /= (@sidebar.hiddenWidth - @origoX)
+                else
+                    @zoom /= (@sidebar.width - @origoX)
+            else
+                @zoom /= -@origoX
+        @
+
+
     mousedownHandler: (event) ->
         if @currentSignal?
             @dragging = true
@@ -155,11 +180,12 @@ class App
         @
 
     mouseupHandler: (event) ->
-        if @dragging
-            @dragging = false
-            @canvas.onmousemove = null
-            @endDrag(event)
-        @currentSignal.play(@audioCtx, @gain)
+        if @currentSignal?
+            if @dragging
+                @dragging = false
+                @canvas.onmousemove = null
+                @endDrag(event)
+            @currentSignal.play(@audioCtx, @gain)
         @
 
     scrollHandler: (event) ->

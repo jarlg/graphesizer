@@ -7,6 +7,7 @@ class Sidebar
         @signalList = document.createElement('ul')
         @sidebar.appendChild(@signalList)
             .className = "sidebar-signal-list"
+        @hiddenWidth = 55
         if @hidden
             @hide()
         else
@@ -29,7 +30,7 @@ class Sidebar
         @
 
     hide: () ->
-        @sidebar.style.left = (55 - @width) + "px"
+        @sidebar.style.left = (@hiddenWidth - @width) + "px"
         @
 
     add: (signal) ->
