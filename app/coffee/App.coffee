@@ -9,9 +9,11 @@ class App
         @signalHistory = []
         @currentSignal = null
         @signalColors = []
-        @dragging = false
-
         @selectionEdgeColor = "#93a1a1"
+        @selectionEdgeFocusColor = "#586e75"
+        @hoverMargin = 20
+
+        @dragging = false
 
         @zoom = 1 # s onscreen
         @yZoom = 160 # = height in px corresponding to amplitude 1 in signal
@@ -74,8 +76,8 @@ class App
         @ctx.stroke()
         @ctx.closePath()
         @drawOrigoIndicator()
-        @drawSelection()
         @drawEdgeIndicator()
+        @drawSelection()
 
     drawOrigoIndicator: () ->
         @ctx.beginPath()
@@ -95,9 +97,12 @@ class App
                          , 0
                          , @secondsToGraphX(to) - @secondsToGraphX(from)
                          , window.innerHeight)
-            @drawSelectionEdge(@secondsToGraphX(from), @selectionEdgeColor)
-            @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeColor)
             @drawSelectionIndicators()
+            @drawSelectionEdge(@secondsToGraphX(from), @selectionEdgeColor)
+            if @dragging or @currentSignal.window.focused
+                @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeFocusColor)
+            else
+                @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeColor)
         @
 
     drawSelectionEdge: (x, color) ->
@@ -224,19 +229,31 @@ class App
         if @currentSignal? 
             if @dragging
                 @endDrag(event)
-            if @currentSignal.window.to != @currentSignal.window.from
-                if Math.abs(@currentSignal.window.to - event.x) < 40
-                    @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.to), 'black')
-                else
-                    @draw()
-                if Math.abs(@currentSignal.window.from - event.x) < 40
-                    @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.from), 'black')
-                else
-                    @draw()
+            if @nearSelectionEdge(event.x)
+                if not @currentSignal.window.focused
+                    toX = @secondsToGraphX(@currentSignal.window.to)
+                    fromX = @secondsToGraphX(@currentSignal.window.from)
+                    @currentSignal.window.focused = true
+                    if Math.abs(toX - event.x) < Math.abs(fromX - event.x)
+                        @drawSelectionEdge(toX, @selectionEdgeFocusColor)
+                    else
+                        @drawSelectionEdge(fromX, @selectionEdgeFocusColor)
+            else if @currentSignal.window.focused
+                @currentSignal.window.focused = false
+                @draw()
         @
+
+    nearSelectionEdge: (x) ->
+        if @currentSignal.window.to != @currentSignal.window.from
+            toX = @secondsToGraphX(@currentSignal.window.to)
+            fromX = @secondsToGraphX(@currentSignal.window.from)
+            if Math.abs(toX - x) < @hoverMargin or Math.abs(fromX - x) < @hoverMargin
+                return true
+        false
 
     clear: () ->
         @canvas.height = @canvas.height
+        @
 
 
 module.exports = App

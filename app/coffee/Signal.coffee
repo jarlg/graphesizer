@@ -11,7 +11,7 @@ math = require('mathjs')()
 class Signal
     constructor: (@fn, @samplerate) ->
         @playing = false
-        @window = { from : 0, to : 0 } # units in seconds
+        @window =  { from : 0, to : 0, focused: false } # units in seconds
         @samples = []
         @
 
@@ -68,6 +68,7 @@ class Signal
     startWindowSelection: (s) -> 
         @window.from = s
         @window.to = s
+        @window.focused = true
         @
 
     endWindowSelection: (s) ->
