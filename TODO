@@ -7,6 +7,7 @@ LAYOUT
 UX
     * onclick of signals in sidebar should give focus
     * improve zoom algo (stepping, easing)
+    * drag either end of sample window
 
 DESIGN
     * Georgia is not perfect (ex. too big parens)
