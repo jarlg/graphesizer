@@ -14,7 +14,6 @@ UX
     * onclick of signals in sidebar should give focus
     *? onclick of canvas to select nearest signal
     *? drag signal to increase amplitude and dephase
-    * place x origin (dblclick? mousedown + space?)
         -> better zoom algo
 
 DESIGN
