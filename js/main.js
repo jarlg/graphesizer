@@ -13,6 +13,9 @@ App = (function() {
     this.signalHistory = [];
     this.currentSignal = null;
     this.signalColors = [];
+    this.selectionEdgeColor = "#93a1a1";
+    this.selectionEdgeFocusColor = "#586e75";
+    this.hoverMargin = 20;
     this.dragging = false;
     this.zoom = 1;
     this.yZoom = 160;
@@ -40,6 +43,16 @@ App = (function() {
         return _this.keydownHandler(event);
       };
     })(this)));
+    this.canvas.addEventListener('dblclick', ((function(_this) {
+      return function(event) {
+        return _this.dblclickHandler(event);
+      };
+    })(this)));
+    this.canvas.addEventListener('mousemove', ((function(_this) {
+      return function(event) {
+        return _this.mousemoveHandler(event);
+      };
+    })(this)));
     this.initGain();
   }
 
@@ -58,6 +71,14 @@ App = (function() {
   App.prototype.setSignalColors = function(signalColors) {
     this.signalColors = signalColors;
     return this;
+  };
+
+  App.prototype.fromX = function() {
+    return this.secondsToGraphX(this.currentSignal.window.from);
+  };
+
+  App.prototype.toX = function() {
+    return this.secondsToGraphX(this.currentSignal.window.to);
   };
 
   App.prototype.nextColor = function() {
@@ -103,8 +124,8 @@ App = (function() {
     this.ctx.stroke();
     this.ctx.closePath();
     this.drawOrigoIndicator();
-    this.drawSelection();
-    return this.drawEdgeIndicator();
+    this.drawEdgeIndicator();
+    return this.drawSelection();
   };
 
   App.prototype.drawOrigoIndicator = function() {
@@ -124,16 +145,24 @@ App = (function() {
     if (to !== from || this.dragging) {
       this.ctx.fillStyle = "rgba(238, 232, 213, 0.5)";
       this.ctx.fillRect(this.secondsToGraphX(from), 0, this.secondsToGraphX(to) - this.secondsToGraphX(from), window.innerHeight);
-      this.ctx.beginPath();
-      this.ctx.strokeStyle = "#93a1a1";
-      this.ctx.moveTo(this.secondsToGraphX(from), 0);
-      this.ctx.lineTo(this.secondsToGraphX(from), window.innerHeight);
-      this.ctx.moveTo(this.secondsToGraphX(to), 0);
-      this.ctx.lineTo(this.secondsToGraphX(to), window.innerHeight);
-      this.ctx.stroke();
-      this.ctx.closePath();
       this.drawSelectionIndicators();
+      this.drawSelectionEdge(this.secondsToGraphX(from), this.selectionEdgeColor);
+      if (this.dragging || this.currentSignal.window.focused) {
+        this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeFocusColor);
+      } else {
+        this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeColor);
+      }
     }
+    return this;
+  };
+
+  App.prototype.drawSelectionEdge = function(x, color) {
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = color;
+    this.ctx.moveTo(x, 0);
+    this.ctx.lineTo(x, window.innerHeight);
+    this.ctx.stroke();
+    this.ctx.closePath();
     return this;
   };
 
@@ -149,8 +178,8 @@ App = (function() {
       lMargin = 100;
     }
     rMargin = 100;
-    fromX = this.secondsToGraphX(this.currentSignal.window.from);
-    toX = this.secondsToGraphX(this.currentSignal.window.to);
+    fromX = this.fromX();
+    toX = this.toX();
     if (this.currentSignal.window.from < this.currentSignal.window.to) {
       fromX += fromX > lMargin ? leftOffset : rightOffset;
       toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
@@ -220,10 +249,30 @@ App = (function() {
     return this;
   };
 
+  App.prototype.dblclickHandler = function(event) {
+    event.preventDefault();
+    if (this.currentSignal != null) {
+      this.origoX = event.x;
+      this.dragging = false;
+      this.draw();
+    }
+    return this;
+  };
+
   App.prototype.mousedownHandler = function(event) {
+    var tmpTo;
+    event.preventDefault();
     if (this.currentSignal != null) {
       this.dragging = true;
-      this.startDrag(event);
+      if (!this.currentSignal.window.focused) {
+        this.startDrag(event);
+      } else {
+        if (Math.abs(this.fromX() - event.x) < Math.abs(this.toX() - event.x)) {
+          tmpTo = this.currentSignal.window.to;
+          this.currentSignal.window.to = this.currentSignal.window.from;
+          this.currentSignal.window.from = tmpTo;
+        }
+      }
     }
     return this;
   };
@@ -232,7 +281,6 @@ App = (function() {
     if (this.currentSignal != null) {
       if (this.dragging) {
         this.dragging = false;
-        this.canvas.onmousemove = null;
         this.endDrag(event);
       }
       this.currentSignal.play(this.audioCtx, this.gain);
@@ -242,17 +290,20 @@ App = (function() {
 
   App.prototype.scrollHandler = function(event) {
     event.preventDefault();
-    this.zoom += event.deltaY;
+    if (this.zoom > 10) {
+      this.zoom += event.deltaY;
+    } else if (this.zoom > 1) {
+      this.zoom += event.deltaY / 10;
+    } else if (this.zoom >= 0) {
+      this.zoom += event.deltaY / 100;
+    } else {
+      this.zoom = 0;
+    }
     return this.draw();
   };
 
   App.prototype.startDrag = function(event) {
     this.currentSignal.startWindowSelection(this.graphXToSeconds(event.x));
-    this.canvas.onmousemove = ((function(_this) {
-      return function(event) {
-        return _this.endDrag(event);
-      };
-    })(this));
     return this.draw();
   };
 
@@ -261,8 +312,40 @@ App = (function() {
     return this.draw();
   };
 
+  App.prototype.mousemoveHandler = function(event) {
+    if (this.currentSignal != null) {
+      if (this.dragging) {
+        this.endDrag(event);
+      }
+      if (this.nearSelectionEdge(event.x)) {
+        if (!this.currentSignal.window.focused) {
+          this.currentSignal.window.focused = true;
+          if (Math.abs(this.toX() - event.x) < Math.abs(this.fromX() - event.x)) {
+            this.drawSelectionEdge(this.toX(), this.selectionEdgeFocusColor);
+          } else {
+            this.drawSelectionEdge(this.fromX(), this.selectionEdgeFocusColor);
+          }
+        }
+      } else if (this.currentSignal.window.focused) {
+        this.currentSignal.window.focused = false;
+        this.draw();
+      }
+    }
+    return this;
+  };
+
+  App.prototype.nearSelectionEdge = function(x) {
+    if (this.currentSignal.window.to !== this.currentSignal.window.from) {
+      if (Math.abs(this.toX() - x) < this.hoverMargin || Math.abs(this.fromX() - x) < this.hoverMargin) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   App.prototype.clear = function() {
-    return this.canvas.height = this.canvas.height;
+    this.canvas.height = this.canvas.height;
+    return this;
   };
 
   return App;
@@ -363,7 +446,8 @@ Signal = (function() {
     this.playing = false;
     this.window = {
       from: 0,
-      to: 0
+      to: 0,
+      focused: false
     };
     this.samples = [];
     this;
@@ -445,6 +529,7 @@ Signal = (function() {
   Signal.prototype.startWindowSelection = function(s) {
     this.window.from = s;
     this.window.to = s;
+    this.window.focused = true;
     return this;
   };
 
