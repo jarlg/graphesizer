@@ -171,6 +171,11 @@ class App
                 @zoom /= -@origoX
         @
 
+    dblclickHandler: (event) ->
+        @origoX = event.x
+        @dragging = false
+        @draw()
+
     mousedownHandler: (event) ->
         if @currentSignal?
             @dragging = true

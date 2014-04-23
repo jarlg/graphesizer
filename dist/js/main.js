@@ -40,6 +40,11 @@ App = (function() {
         return _this.keydownHandler(event);
       };
     })(this)));
+    this.canvas.addEventListener('dblclick', ((function(_this) {
+      return function(event) {
+        return _this.dblclickHandler(event);
+      };
+    })(this)));
     this.initGain();
   }
 
@@ -218,6 +223,12 @@ App = (function() {
       }
     }
     return this;
+  };
+
+  App.prototype.dblclickHandler = function(event) {
+    this.origoX = event.x;
+    this.dragging = false;
+    return this.draw();
   };
 
   App.prototype.mousedownHandler = function(event) {
