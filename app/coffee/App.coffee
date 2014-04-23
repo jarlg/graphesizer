@@ -172,11 +172,14 @@ class App
         @
 
     dblclickHandler: (event) ->
+        event.preventDefault()
         @origoX = event.x
         @dragging = false
         @draw()
 
     mousedownHandler: (event) ->
+        event.preventDefault()
+        @origoX = event.x
         if @currentSignal?
             @dragging = true
             @startDrag(event)

@@ -226,12 +226,15 @@ App = (function() {
   };
 
   App.prototype.dblclickHandler = function(event) {
+    event.preventDefault();
     this.origoX = event.x;
     this.dragging = false;
     return this.draw();
   };
 
   App.prototype.mousedownHandler = function(event) {
+    event.preventDefault();
+    this.origoX = event.x;
     if (this.currentSignal != null) {
       this.dragging = true;
       this.startDrag(event);
