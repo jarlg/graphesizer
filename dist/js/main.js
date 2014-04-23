@@ -45,6 +45,11 @@ App = (function() {
         return _this.dblclickHandler(event);
       };
     })(this)));
+    this.canvas.addEventListener('mousemove', ((function(_this) {
+      return function(event) {
+        return _this.mousemoveHandler(event);
+      };
+    })(this)));
     this.initGain();
   }
 
@@ -246,7 +251,6 @@ App = (function() {
     if (this.currentSignal != null) {
       if (this.dragging) {
         this.dragging = false;
-        this.canvas.onmousemove = null;
         this.endDrag(event);
       }
       this.currentSignal.play(this.audioCtx, this.gain);
@@ -270,17 +274,18 @@ App = (function() {
 
   App.prototype.startDrag = function(event) {
     this.currentSignal.startWindowSelection(this.graphXToSeconds(event.x));
-    this.canvas.onmousemove = ((function(_this) {
-      return function(event) {
-        return _this.endDrag(event);
-      };
-    })(this));
     return this.draw();
   };
 
   App.prototype.endDrag = function(event) {
     this.currentSignal.endWindowSelection(this.graphXToSeconds(event.x));
     return this.draw();
+  };
+
+  App.prototype.mousemoveHandler = function(event) {
+    if (this.dragging) {
+      return this.endDrag(event);
+    }
   };
 
   App.prototype.clear = function() {

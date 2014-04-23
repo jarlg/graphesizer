@@ -24,6 +24,7 @@ class App
         @canvas.addEventListener('mousewheel', ( (event) => @scrollHandler(event) ))
         @canvas.addEventListener('keydown',    ( (event) => @keydownHandler(event) ))
         @canvas.addEventListener('dblclick',   ( (event) => @dblclickHandler(event) ))
+        @canvas.addEventListener('mousemove',  ( (event) => @mousemoveHandler(event) ))
 
         @initGain()
 
@@ -189,7 +190,6 @@ class App
         if @currentSignal?
             if @dragging
                 @dragging = false
-                @canvas.onmousemove = null
                 @endDrag(event)
             @currentSignal.play(@audioCtx, @gain)
         @
@@ -208,12 +208,15 @@ class App
 
     startDrag: (event) ->
         @currentSignal.startWindowSelection(@graphXToSeconds(event.x))
-        @canvas.onmousemove = ((event) => @endDrag(event))
         @draw()
 
     endDrag: (event) ->
         @currentSignal.endWindowSelection(@graphXToSeconds(event.x))
         @draw()
+
+    mousemoveHandler: (event) ->
+        if @dragging
+            @endDrag(event)
 
     clear: () ->
         @canvas.height = @canvas.height
