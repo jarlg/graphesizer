@@ -1,20 +1,12 @@
 BUGS
-    * sometimes sounds stay in the system, make sure to always turn them off
-    (removed by silencing when changing signals; perhaps not ideal)
 
 FUNCTIONALITY
-    * REFACTOR
-    * onscroll for zoom (improve algo!)
-    -> shouldn't be able to zoom into negative
 
 LAYOUT
-    *? center shit
 
 UX
     * onclick of signals in sidebar should give focus
-    *? onclick of canvas to select nearest signal
-    *? drag signal to increase amplitude and dephase
-        -> better zoom algo
+    * improve zoom algo (stepping, easing)
 
 DESIGN
     * Georgia is not perfect (ex. too big parens)

@@ -253,7 +253,15 @@ App = (function() {
 
   App.prototype.scrollHandler = function(event) {
     event.preventDefault();
-    this.zoom += event.deltaY;
+    if (this.zoom > 10) {
+      this.zoom += event.deltaY;
+    } else if (this.zoom > 1) {
+      this.zoom += event.deltaY / 10;
+    } else if (this.zoom >= 0) {
+      this.zoom += event.deltaY / 100;
+    } else {
+      this.zoom = 0;
+    }
     return this.draw();
   };
 
