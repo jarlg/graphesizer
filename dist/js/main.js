@@ -247,7 +247,6 @@ App = (function() {
 
   App.prototype.mousedownHandler = function(event) {
     event.preventDefault();
-    this.origoX = event.x;
     if (this.currentSignal != null) {
       this.dragging = true;
       this.startDrag(event);
@@ -291,19 +290,21 @@ App = (function() {
   };
 
   App.prototype.mousemoveHandler = function(event) {
-    if (this.dragging) {
-      this.endDrag(event);
-    }
-    if ((this.currentSignal != null) && this.currentSignal.window.to !== this.currentSignal.window.from) {
-      if (Math.abs(this.currentSignal.window.to - event.x) < 40) {
-        this.drawSelectionEdge(this.secondsToGraphX(this.currentSignal.window.to), 'black');
-      } else {
-        this.draw();
+    if (this.currentSignal != null) {
+      if (this.dragging) {
+        this.endDrag(event);
       }
-      if (Math.abs(this.currentSignal.window.from - event.x) < 40) {
-        this.drawSelectionEdge(this.secondsToGraphX(this.currentSignal.window.from), 'black');
-      } else {
-        this.draw();
+      if (this.currentSignal.window.to !== this.currentSignal.window.from) {
+        if (Math.abs(this.currentSignal.window.to - event.x) < 40) {
+          this.drawSelectionEdge(this.secondsToGraphX(this.currentSignal.window.to), 'black');
+        } else {
+          this.draw();
+        }
+        if (Math.abs(this.currentSignal.window.from - event.x) < 40) {
+          this.drawSelectionEdge(this.secondsToGraphX(this.currentSignal.window.from), 'black');
+        } else {
+          this.draw();
+        }
       }
     }
     return this;

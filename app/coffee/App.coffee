@@ -187,7 +187,6 @@ class App
 
     mousedownHandler: (event) ->
         event.preventDefault()
-        @origoX = event.x
         if @currentSignal?
             @dragging = true
             @startDrag(event)
@@ -222,17 +221,18 @@ class App
         @draw()
 
     mousemoveHandler: (event) ->
-        if @dragging
-            @endDrag(event)
-        if @currentSignal? and @currentSignal.window.to != @currentSignal.window.from
-            if Math.abs(@currentSignal.window.to - event.x) < 40
-                @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.to), 'black')
-            else
-                @draw()
-            if Math.abs(@currentSignal.window.from - event.x) < 40
-                @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.from), 'black')
-            else
-                @draw()
+        if @currentSignal? 
+            if @dragging
+                @endDrag(event)
+            if @currentSignal.window.to != @currentSignal.window.from
+                if Math.abs(@currentSignal.window.to - event.x) < 40
+                    @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.to), 'black')
+                else
+                    @draw()
+                if Math.abs(@currentSignal.window.from - event.x) < 40
+                    @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.from), 'black')
+                else
+                    @draw()
         @
 
     clear: () ->
