@@ -73,6 +73,14 @@ App = (function() {
     return this;
   };
 
+  App.prototype.fromX = function() {
+    return this.secondsToGraphX(this.currentSignal.window.from);
+  };
+
+  App.prototype.toX = function() {
+    return this.secondsToGraphX(this.currentSignal.window.to);
+  };
+
   App.prototype.nextColor = function() {
     var nSignals;
     nSignals = this.sidebar != null ? this.sidebar.signals.length : this.signalHistory.length;
@@ -170,8 +178,8 @@ App = (function() {
       lMargin = 100;
     }
     rMargin = 100;
-    fromX = this.secondsToGraphX(this.currentSignal.window.from);
-    toX = this.secondsToGraphX(this.currentSignal.window.to);
+    fromX = this.fromX();
+    toX = this.toX();
     if (this.currentSignal.window.from < this.currentSignal.window.to) {
       fromX += fromX > lMargin ? leftOffset : rightOffset;
       toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
@@ -252,10 +260,19 @@ App = (function() {
   };
 
   App.prototype.mousedownHandler = function(event) {
+    var tmpTo;
     event.preventDefault();
     if (this.currentSignal != null) {
       this.dragging = true;
-      this.startDrag(event);
+      if (!this.currentSignal.window.focused) {
+        this.startDrag(event);
+      } else {
+        if (Math.abs(this.fromX() - event.x) < Math.abs(this.toX() - event.x)) {
+          tmpTo = this.currentSignal.window.to;
+          this.currentSignal.window.to = this.currentSignal.window.from;
+          this.currentSignal.window.from = tmpTo;
+        }
+      }
     }
     return this;
   };
@@ -296,20 +313,17 @@ App = (function() {
   };
 
   App.prototype.mousemoveHandler = function(event) {
-    var fromX, toX;
     if (this.currentSignal != null) {
       if (this.dragging) {
         this.endDrag(event);
       }
       if (this.nearSelectionEdge(event.x)) {
         if (!this.currentSignal.window.focused) {
-          toX = this.secondsToGraphX(this.currentSignal.window.to);
-          fromX = this.secondsToGraphX(this.currentSignal.window.from);
           this.currentSignal.window.focused = true;
-          if (Math.abs(toX - event.x) < Math.abs(fromX - event.x)) {
-            this.drawSelectionEdge(toX, this.selectionEdgeFocusColor);
+          if (Math.abs(this.toX() - event.x) < Math.abs(this.fromX() - event.x)) {
+            this.drawSelectionEdge(this.toX(), this.selectionEdgeFocusColor);
           } else {
-            this.drawSelectionEdge(fromX, this.selectionEdgeFocusColor);
+            this.drawSelectionEdge(this.fromX(), this.selectionEdgeFocusColor);
           }
         }
       } else if (this.currentSignal.window.focused) {
@@ -321,11 +335,8 @@ App = (function() {
   };
 
   App.prototype.nearSelectionEdge = function(x) {
-    var fromX, toX;
     if (this.currentSignal.window.to !== this.currentSignal.window.from) {
-      toX = this.secondsToGraphX(this.currentSignal.window.to);
-      fromX = this.secondsToGraphX(this.currentSignal.window.from);
-      if (Math.abs(toX - x) < this.hoverMargin || Math.abs(fromX - x) < this.hoverMargin) {
+      if (Math.abs(this.toX() - x) < this.hoverMargin || Math.abs(this.fromX() - x) < this.hoverMargin) {
         return true;
       }
     }

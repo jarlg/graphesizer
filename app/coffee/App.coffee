@@ -42,8 +42,9 @@ class App
         @ctx.lineWidth = lineWidth
         @
 
-    setSignalColors: (@signalColors) ->
-        @
+    setSignalColors: (@signalColors) -> @
+    fromX: () -> @secondsToGraphX(@currentSignal.window.from)
+    toX: () -> @secondsToGraphX(@currentSignal.window.to)
         
     # we choose next color by cycling through @signalColors, using
     # index = (number of signals) % (number of colors)
@@ -124,8 +125,8 @@ class App
         else
             lMargin = 100
         rMargin = 100
-        fromX = @secondsToGraphX(@currentSignal.window.from)
-        toX   = @secondsToGraphX(@currentSignal.window.to)
+        fromX = @fromX()
+        toX   = @toX()
         if @currentSignal.window.from < @currentSignal.window.to
             # if close to sides of screen draw inside selection
             fromX += if fromX > lMargin then leftOffset else rightOffset
@@ -194,7 +195,13 @@ class App
         event.preventDefault()
         if @currentSignal?
             @dragging = true
-            @startDrag(event)
+            if not @currentSignal.window.focused
+                @startDrag(event)
+            else
+                if Math.abs(@fromX() - event.x) < Math.abs(@toX() - event.x)
+                    tmpTo = @currentSignal.window.to
+                    @currentSignal.window.to = @currentSignal.window.from
+                    @currentSignal.window.from = tmpTo
         @
 
     mouseupHandler: (event) ->
@@ -231,13 +238,11 @@ class App
                 @endDrag(event)
             if @nearSelectionEdge(event.x)
                 if not @currentSignal.window.focused
-                    toX = @secondsToGraphX(@currentSignal.window.to)
-                    fromX = @secondsToGraphX(@currentSignal.window.from)
                     @currentSignal.window.focused = true
-                    if Math.abs(toX - event.x) < Math.abs(fromX - event.x)
-                        @drawSelectionEdge(toX, @selectionEdgeFocusColor)
+                    if Math.abs(@toX() - event.x) < Math.abs(@fromX() - event.x)
+                        @drawSelectionEdge(@toX(), @selectionEdgeFocusColor)
                     else
-                        @drawSelectionEdge(fromX, @selectionEdgeFocusColor)
+                        @drawSelectionEdge(@fromX(), @selectionEdgeFocusColor)
             else if @currentSignal.window.focused
                 @currentSignal.window.focused = false
                 @draw()
@@ -245,9 +250,7 @@ class App
 
     nearSelectionEdge: (x) ->
         if @currentSignal.window.to != @currentSignal.window.from
-            toX = @secondsToGraphX(@currentSignal.window.to)
-            fromX = @secondsToGraphX(@currentSignal.window.from)
-            if Math.abs(toX - x) < @hoverMargin or Math.abs(fromX - x) < @hoverMargin
+            if Math.abs(@toX() - x) < @hoverMargin or Math.abs(@fromX() - x) < @hoverMargin
                 return true
         false
 
