@@ -23,6 +23,7 @@ class App
         @canvas.addEventListener('mouseup',    ( (event) => @mouseupHandler(event) ))
         @canvas.addEventListener('mousewheel', ( (event) => @scrollHandler(event) ))
         @canvas.addEventListener('keydown',    ( (event) => @keydownHandler(event) ))
+        @canvas.addEventListener('dblclick',   ( (event) => @dblclickHandler(event) ))
 
         @initGain()
 
@@ -54,7 +55,6 @@ class App
         @currentSignal.stop() if @currentSignal?
         @currentSignal = signal
         @draw()
-        
 
     draw: () ->
         @clear()
@@ -142,7 +142,6 @@ class App
                      , window.innerHeight - 20)
         @
 
-
     secondsToGraphX: (s) ->
         ((s * @canvas.width) / @zoom) + @origoX
 
@@ -171,7 +170,6 @@ class App
             else
                 @zoom /= -@origoX
         @
-
 
     mousedownHandler: (event) ->
         if @currentSignal?
