@@ -14,6 +14,7 @@ App = (function() {
     this.currentSignal = null;
     this.signalColors = [];
     this.dragging = false;
+    this.selectionEdgeColor = "#93a1a1";
     this.zoom = 1;
     this.yZoom = 160;
     this.origoX = window.innerWidth / 2;
@@ -134,16 +135,20 @@ App = (function() {
     if (to !== from || this.dragging) {
       this.ctx.fillStyle = "rgba(238, 232, 213, 0.5)";
       this.ctx.fillRect(this.secondsToGraphX(from), 0, this.secondsToGraphX(to) - this.secondsToGraphX(from), window.innerHeight);
-      this.ctx.beginPath();
-      this.ctx.strokeStyle = "#93a1a1";
-      this.ctx.moveTo(this.secondsToGraphX(from), 0);
-      this.ctx.lineTo(this.secondsToGraphX(from), window.innerHeight);
-      this.ctx.moveTo(this.secondsToGraphX(to), 0);
-      this.ctx.lineTo(this.secondsToGraphX(to), window.innerHeight);
-      this.ctx.stroke();
-      this.ctx.closePath();
+      this.drawSelectionEdge(this.secondsToGraphX(from), this.selectionEdgeColor);
+      this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeColor);
       this.drawSelectionIndicators();
     }
+    return this;
+  };
+
+  App.prototype.drawSelectionEdge = function(x, color) {
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = color;
+    this.ctx.moveTo(x, 0);
+    this.ctx.lineTo(x, window.innerHeight);
+    this.ctx.stroke();
+    this.ctx.closePath();
     return this;
   };
 
@@ -232,9 +237,12 @@ App = (function() {
 
   App.prototype.dblclickHandler = function(event) {
     event.preventDefault();
-    this.origoX = event.x;
-    this.dragging = false;
-    return this.draw();
+    if (this.currentSignal != null) {
+      this.origoX = event.x;
+      this.dragging = false;
+      this.draw();
+    }
+    return this;
   };
 
   App.prototype.mousedownHandler = function(event) {
@@ -284,8 +292,21 @@ App = (function() {
 
   App.prototype.mousemoveHandler = function(event) {
     if (this.dragging) {
-      return this.endDrag(event);
+      this.endDrag(event);
     }
+    if ((this.currentSignal != null) && this.currentSignal.window.to !== this.currentSignal.window.from) {
+      if (Math.abs(this.currentSignal.window.to - event.x) < 40) {
+        this.drawSelectionEdge(this.secondsToGraphX(this.currentSignal.window.to), 'black');
+      } else {
+        this.draw();
+      }
+      if (Math.abs(this.currentSignal.window.from - event.x) < 40) {
+        this.drawSelectionEdge(this.secondsToGraphX(this.currentSignal.window.from), 'black');
+      } else {
+        this.draw();
+      }
+    }
+    return this;
   };
 
   App.prototype.clear = function() {

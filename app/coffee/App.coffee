@@ -11,6 +11,8 @@ class App
         @signalColors = []
         @dragging = false
 
+        @selectionEdgeColor = "#93a1a1"
+
         @zoom = 1 # s onscreen
         @yZoom = 160 # = height in px corresponding to amplitude 1 in signal
         @origoX = window.innerWidth / 2
@@ -93,16 +95,19 @@ class App
                          , 0
                          , @secondsToGraphX(to) - @secondsToGraphX(from)
                          , window.innerHeight)
-            @ctx.beginPath()
-            @ctx.strokeStyle = "#93a1a1"
-            @ctx.moveTo(@secondsToGraphX(from), 0)
-            @ctx.lineTo(@secondsToGraphX(from), window.innerHeight)
-            @ctx.moveTo(@secondsToGraphX(to)  , 0)
-            @ctx.lineTo(@secondsToGraphX(to)  , window.innerHeight)
-            @ctx.stroke()
-            @ctx.closePath()
+            @drawSelectionEdge(@secondsToGraphX(from), @selectionEdgeColor)
+            @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeColor)
             @drawSelectionIndicators()
         @
+
+    drawSelectionEdge: (x, color) ->
+            @ctx.beginPath()
+            @ctx.strokeStyle = color
+            @ctx.moveTo(x, 0)
+            @ctx.lineTo(x, window.innerHeight)
+            @ctx.stroke()
+            @ctx.closePath()
+            @
 
     drawSelectionIndicators: () ->
         @ctx.font = "20pt Georgia"
@@ -174,9 +179,11 @@ class App
 
     dblclickHandler: (event) ->
         event.preventDefault()
-        @origoX = event.x
-        @dragging = false
-        @draw()
+        if @currentSignal?
+            @origoX = event.x
+            @dragging = false
+            @draw()
+        @
 
     mousedownHandler: (event) ->
         event.preventDefault()
@@ -217,6 +224,16 @@ class App
     mousemoveHandler: (event) ->
         if @dragging
             @endDrag(event)
+        if @currentSignal? and @currentSignal.window.to != @currentSignal.window.from
+            if Math.abs(@currentSignal.window.to - event.x) < 40
+                @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.to), 'black')
+            else
+                @draw()
+            if Math.abs(@currentSignal.window.from - event.x) < 40
+                @drawSelectionEdge(@secondsToGraphX(@currentSignal.window.from), 'black')
+            else
+                @draw()
+        @
 
     clear: () ->
         @canvas.height = @canvas.height
