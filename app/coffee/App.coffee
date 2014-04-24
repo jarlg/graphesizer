@@ -1,6 +1,7 @@
 "use strict"
 
 math = require('mathjs')()
+Signal = require('./Signal.coffee')
 
 class App
     constructor: (@canvas, @samplerate) ->
@@ -26,7 +27,6 @@ class App
         @canvas.addEventListener('mousedown',  ( (event) => @mousedownHandler(event) ))
         @canvas.addEventListener('mouseup',    ( (event) => @mouseupHandler(event) ))
         @canvas.addEventListener('mousewheel', ( (event) => @scrollHandler(event) ))
-        @canvas.addEventListener('keydown',    ( (event) => @keydownHandler(event) ))
         @canvas.addEventListener('dblclick',   ( (event) => @dblclickHandler(event) ))
         @canvas.addEventListener('mousemove',  ( (event) => @mousemoveHandler(event) ))
 
@@ -53,23 +53,23 @@ class App
         @signalColors[nSignals % @signalColors.length]
 
     add: (signal) ->
+        signal.color = @nextColor()
+        @draw(signal)
         if @sidebar?
             @sidebar.add(signal)
         else
             @signalHistory.push(signal)
-        signal.color = @nextColor()
         @currentSignal.stop() if @currentSignal?
         @currentSignal = signal
-        @draw()
 
-    draw: () ->
+    draw: (signal=@currentSignal) ->
         @clear()
-        expr = math.parse(@currentSignal.fn).compile(math)
+        expr = math.parse(signal.fn).compile(math)
         delta = @zoom / @canvas.width
         scope = { x: @graphXToSeconds(0) }
         @ctx.moveTo(0, expr.eval(scope))
         @ctx.beginPath()
-        @ctx.strokeStyle = @currentSignal.color
+        @ctx.strokeStyle = signal.color
         for i in [1 .. @ctx.canvas.width-1]
             do (i) => 
                 scope.x += delta
@@ -78,7 +78,7 @@ class App
         @ctx.closePath()
         @drawOrigoIndicator()
         @drawEdgeIndicator()
-        @drawSelection()
+        @drawSelection(signal)
 
     drawOrigoIndicator: () ->
         @ctx.beginPath()
@@ -89,18 +89,18 @@ class App
         @ctx.closePath()
         @
 
-    drawSelection: () ->
-        from = @currentSignal.window.from
-        to = @currentSignal.window.to
+    drawSelection: (signal) ->
+        from = signal.window.from
+        to = signal.window.to
         if to != from or @dragging
             @ctx.fillStyle = "rgba(238, 232, 213, 0.5)"
             @ctx.fillRect( @secondsToGraphX(from)
                          , 0
                          , @secondsToGraphX(to) - @secondsToGraphX(from)
                          , window.innerHeight)
-            @drawSelectionIndicators()
+            @drawSelectionIndicators(signal)
             @drawSelectionEdge(@secondsToGraphX(from), @selectionEdgeColor)
-            if @dragging or @currentSignal.window.focused
+            if @dragging or signal.window.focused
                 @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeFocusColor)
             else
                 @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeColor)
@@ -115,7 +115,7 @@ class App
             @ctx.closePath()
             @
 
-    drawSelectionIndicators: () ->
+    drawSelectionIndicators: (signal) ->
         @ctx.font = "20pt Georgia"
         @ctx.fillStyle = "#586e75"
         leftOffset = -95
@@ -127,7 +127,7 @@ class App
         rMargin = 100
         fromX = @fromX()
         toX   = @toX()
-        if @currentSignal.window.from < @currentSignal.window.to
+        if signal.window.from < signal.window.to
             # if close to sides of screen draw inside selection
             fromX += if fromX > lMargin then leftOffset else rightOffset
             toX   += if window.innerWidth - toX > rMargin then rightOffset else leftOffset
@@ -138,10 +138,10 @@ class App
             toX += if toX > lMargin then leftOffset else rightOffset
             if fromX - toX < 80 then fromY = 60 else fromY = 30
             toY = 30
-        @ctx.fillText( @currentSignal.window.from.toFixed(2) + 's'
+        @ctx.fillText( signal.window.from.toFixed(2) + 's'
                      , fromX
                      , fromY)
-        @ctx.fillText( @currentSignal.window.to.toFixed(2) + 's'
+        @ctx.fillText( signal.window.to.toFixed(2) + 's'
                      , toX
                      , toY)
         @
@@ -159,29 +159,6 @@ class App
 
     graphXToSeconds: (x) ->
         (x - @origoX) * @zoom / @canvas.width
-
-    keydownHandler: (event) ->
-        if @currentSignal? and event.keyCode == 32 #spacebar
-            if Math.abs(@currentSignal.window.from) < Math.abs(@currentSignal.window.to)
-                @zoomFitToEdge(@currentSignal.window.to)
-            else
-                @zoomFitToEdge(@currentSignal.window.from)
-            @draw()
-        @
-
-    zoomFitToEdge: (s) ->
-        @zoom = s * @canvas.width
-        if s > 0
-            @zoom /= (window.innerWidth - @origoX)
-        else if s < 0
-            if @sidebar?
-                if @sidebar.hidden
-                    @zoom /= (@sidebar.hiddenWidth - @origoX)
-                else
-                    @zoom /= (@sidebar.width - @origoX)
-            else
-                @zoom /= -@origoX
-        @
 
     dblclickHandler: (event) ->
         event.preventDefault()
@@ -253,6 +230,14 @@ class App
             if Math.abs(@toX() - x) < @hoverMargin or Math.abs(@fromX() - x) < @hoverMargin
                 return true
         false
+
+    bindInput: (@input) ->
+        @input.addEventListener('keyup', ( (event) => 
+            if not @currentSignal? or @currentSignal.fn != @input.value()
+                try @add(new Signal(@input.value(), @samplerate))
+                catch e
+        ))
+        @
 
     clear: () ->
         @canvas.height = @canvas.height

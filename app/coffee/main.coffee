@@ -1,7 +1,7 @@
 "use strict"
 
 App = require('./App.coffee')
-Signal = require('./Signal.coffee')
+Input = require('./Input.coffee')
 Sidebar = require('./Sidebar.coffee')
 
 # let's you write $('#graph') instead of document.querySelector('#graph')
@@ -13,6 +13,7 @@ samplerate = 48000
 app = new App($('#graph'), samplerate)
 app.sidebar = new Sidebar($('#sidebar'), 250)
 app.sidebar.bindButton($('#sidebar-toggle'))
+app.bindInput(new Input($('#fn-input')))
 
 app.setSignalColors(["#b58900",    #"yellow"  
                      "#dc322f",    #"red"     
@@ -23,8 +24,3 @@ app.setSignalColors(["#b58900",    #"yellow"
                      "#cb4b16",    #"orange"  
                      "#859900"])   #"green"   
    .setLineWidth(3)
-
-$('#fn-input').onkeypress = (event) ->
-    if event.keyCode == 13 # enter-key
-        signal = new Signal(@value, samplerate)
-        app.add(signal)

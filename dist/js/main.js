@@ -1,8 +1,10 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
-var App, math;
+var App, Signal, math;
 
 math = require('mathjs')();
+
+Signal = require('./Signal.coffee');
 
 App = (function() {
   function App(canvas, samplerate) {
@@ -36,11 +38,6 @@ App = (function() {
     this.canvas.addEventListener('mousewheel', ((function(_this) {
       return function(event) {
         return _this.scrollHandler(event);
-      };
-    })(this)));
-    this.canvas.addEventListener('keydown', ((function(_this) {
-      return function(event) {
-        return _this.keydownHandler(event);
       };
     })(this)));
     this.canvas.addEventListener('dblclick', ((function(_this) {
@@ -88,30 +85,33 @@ App = (function() {
   };
 
   App.prototype.add = function(signal) {
+    signal.color = this.nextColor();
+    this.draw(signal);
     if (this.sidebar != null) {
       this.sidebar.add(signal);
     } else {
       this.signalHistory.push(signal);
     }
-    signal.color = this.nextColor();
     if (this.currentSignal != null) {
       this.currentSignal.stop();
     }
-    this.currentSignal = signal;
-    return this.draw();
+    return this.currentSignal = signal;
   };
 
-  App.prototype.draw = function() {
+  App.prototype.draw = function(signal) {
     var delta, expr, i, scope, _fn, _i, _ref;
+    if (signal == null) {
+      signal = this.currentSignal;
+    }
     this.clear();
-    expr = math.parse(this.currentSignal.fn).compile(math);
+    expr = math.parse(signal.fn).compile(math);
     delta = this.zoom / this.canvas.width;
     scope = {
       x: this.graphXToSeconds(0)
     };
     this.ctx.moveTo(0, expr["eval"](scope));
     this.ctx.beginPath();
-    this.ctx.strokeStyle = this.currentSignal.color;
+    this.ctx.strokeStyle = signal.color;
     _fn = (function(_this) {
       return function(i) {
         scope.x += delta;
@@ -125,7 +125,7 @@ App = (function() {
     this.ctx.closePath();
     this.drawOrigoIndicator();
     this.drawEdgeIndicator();
-    return this.drawSelection();
+    return this.drawSelection(signal);
   };
 
   App.prototype.drawOrigoIndicator = function() {
@@ -138,16 +138,16 @@ App = (function() {
     return this;
   };
 
-  App.prototype.drawSelection = function() {
+  App.prototype.drawSelection = function(signal) {
     var from, to;
-    from = this.currentSignal.window.from;
-    to = this.currentSignal.window.to;
+    from = signal.window.from;
+    to = signal.window.to;
     if (to !== from || this.dragging) {
       this.ctx.fillStyle = "rgba(238, 232, 213, 0.5)";
       this.ctx.fillRect(this.secondsToGraphX(from), 0, this.secondsToGraphX(to) - this.secondsToGraphX(from), window.innerHeight);
-      this.drawSelectionIndicators();
+      this.drawSelectionIndicators(signal);
       this.drawSelectionEdge(this.secondsToGraphX(from), this.selectionEdgeColor);
-      if (this.dragging || this.currentSignal.window.focused) {
+      if (this.dragging || signal.window.focused) {
         this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeFocusColor);
       } else {
         this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeColor);
@@ -166,7 +166,7 @@ App = (function() {
     return this;
   };
 
-  App.prototype.drawSelectionIndicators = function() {
+  App.prototype.drawSelectionIndicators = function(signal) {
     var fromX, fromY, lMargin, leftOffset, rMargin, rightOffset, toX, toY;
     this.ctx.font = "20pt Georgia";
     this.ctx.fillStyle = "#586e75";
@@ -180,7 +180,7 @@ App = (function() {
     rMargin = 100;
     fromX = this.fromX();
     toX = this.toX();
-    if (this.currentSignal.window.from < this.currentSignal.window.to) {
+    if (signal.window.from < signal.window.to) {
       fromX += fromX > lMargin ? leftOffset : rightOffset;
       toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
       if (toX - fromX < 80) {
@@ -199,8 +199,8 @@ App = (function() {
       }
       toY = 30;
     }
-    this.ctx.fillText(this.currentSignal.window.from.toFixed(2) + 's', fromX, fromY);
-    this.ctx.fillText(this.currentSignal.window.to.toFixed(2) + 's', toX, toY);
+    this.ctx.fillText(signal.window.from.toFixed(2) + 's', fromX, fromY);
+    this.ctx.fillText(signal.window.to.toFixed(2) + 's', toX, toY);
     return this;
   };
 
@@ -217,36 +217,6 @@ App = (function() {
 
   App.prototype.graphXToSeconds = function(x) {
     return (x - this.origoX) * this.zoom / this.canvas.width;
-  };
-
-  App.prototype.keydownHandler = function(event) {
-    if ((this.currentSignal != null) && event.keyCode === 32) {
-      if (Math.abs(this.currentSignal.window.from) < Math.abs(this.currentSignal.window.to)) {
-        this.zoomFitToEdge(this.currentSignal.window.to);
-      } else {
-        this.zoomFitToEdge(this.currentSignal.window.from);
-      }
-      this.draw();
-    }
-    return this;
-  };
-
-  App.prototype.zoomFitToEdge = function(s) {
-    this.zoom = s * this.canvas.width;
-    if (s > 0) {
-      this.zoom /= window.innerWidth - this.origoX;
-    } else if (s < 0) {
-      if (this.sidebar != null) {
-        if (this.sidebar.hidden) {
-          this.zoom /= this.sidebar.hiddenWidth - this.origoX;
-        } else {
-          this.zoom /= this.sidebar.width - this.origoX;
-        }
-      } else {
-        this.zoom /= -this.origoX;
-      }
-    }
-    return this;
   };
 
   App.prototype.dblclickHandler = function(event) {
@@ -343,6 +313,23 @@ App = (function() {
     return false;
   };
 
+  App.prototype.bindInput = function(input) {
+    this.input = input;
+    this.input.addEventListener('keyup', ((function(_this) {
+      return function(event) {
+        var e;
+        if ((_this.currentSignal == null) || _this.currentSignal.fn !== _this.input.value()) {
+          try {
+            return _this.add(new Signal(_this.input.value(), _this.samplerate));
+          } catch (_error) {
+            e = _error;
+          }
+        }
+      };
+    })(this)));
+    return this;
+  };
+
   App.prototype.clear = function() {
     this.canvas.height = this.canvas.height;
     return this;
@@ -355,7 +342,30 @@ App = (function() {
 module.exports = App;
 
 
-},{}],2:[function(require,module,exports){
+},{"./Signal.coffee":4}],2:[function(require,module,exports){
+"use strict";
+var Input;
+
+Input = (function() {
+  function Input(input) {
+    this.input = input;
+    this;
+  }
+
+  Input.prototype.value = function() {
+    return this.input.value;
+  };
+
+  Input.prototype.addEventListener = window.addEventListener.bind(Input.input);
+
+  return Input;
+
+})();
+
+module.exports = Input;
+
+
+},{}],3:[function(require,module,exports){
 "use strict";
 var Sidebar;
 
@@ -433,7 +443,7 @@ Sidebar = (function() {
 module.exports = Sidebar;
 
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 var Signal, math;
 
@@ -545,13 +555,13 @@ Signal = (function() {
 module.exports = Signal;
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
-var $, App, Sidebar, Signal, app, samplerate;
+var $, App, Input, Sidebar, app, samplerate;
 
 App = require('./App.coffee');
 
-Signal = require('./Signal.coffee');
+Input = require('./Input.coffee');
 
 Sidebar = require('./Sidebar.coffee');
 
@@ -565,15 +575,9 @@ app.sidebar = new Sidebar($('#sidebar'), 250);
 
 app.sidebar.bindButton($('#sidebar-toggle'));
 
+app.bindInput(new Input($('#fn-input')));
+
 app.setSignalColors(["#b58900", "#dc322f", "#d33682", "#6c71c4", "#268bd2", "#2aa198", "#cb4b16", "#859900"]).setLineWidth(3);
 
-$('#fn-input').onkeypress = function(event) {
-  var signal;
-  if (event.keyCode === 13) {
-    signal = new Signal(this.value, samplerate);
-    return app.add(signal);
-  }
-};
 
-
-},{"./App.coffee":1,"./Sidebar.coffee":2,"./Signal.coffee":3}]},{},[4])
+},{"./App.coffee":1,"./Input.coffee":2,"./Sidebar.coffee":3}]},{},[5])
