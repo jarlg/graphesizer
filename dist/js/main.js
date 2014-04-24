@@ -231,11 +231,6 @@ App = (function() {
       this.dragging = true;
       if (!this.currentSignal.window.focused) {
         this.startDrag(event);
-        if ((this.sidebar != null) && this.sidebar.signals[-1] !== this.currentSignal) {
-          this.sidebar.add(this.currentSignal);
-        } else if (this.signalHistory[-1] !== this.currentSignal) {
-          this.signalHistory.push(this.currentSignal);
-        }
       } else {
         if (Math.abs(this.fromX() - event.x) < Math.abs(this.toX() - event.x)) {
           tmpTo = this.currentSignal.window.to;
@@ -251,6 +246,15 @@ App = (function() {
     if (this.currentSignal != null) {
       if (this.dragging) {
         this.dragging = false;
+        if (this.currentSignal.window.to !== this.currentSignal.window.from) {
+          if (this.sidebar != null) {
+            if (this.sidebar.signals.length === 0 || this.sidebar.signals[this.sidebar.signals.length - 1] !== this.currentSignal) {
+              this.sidebar.add(this.currentSignal);
+            }
+          } else if (this.signalHistory.length === 0 || this.signalHistory[this.signalHistory.length - 1] !== this.currentSignal) {
+            this.signalHistory.push(this.currentSignal);
+          }
+        }
         this.endDrag(event);
       }
       this.currentSignal.play(this.audioCtx, this.gain);
@@ -319,11 +323,13 @@ App = (function() {
     this.input.addEventListener('keyup', ((function(_this) {
       return function(event) {
         var e;
-        if ((_this.currentSignal == null) || _this.currentSignal.fn !== _this.input.value()) {
-          try {
-            return _this.add(new Signal(_this.input.value(), _this.samplerate));
-          } catch (_error) {
-            e = _error;
+        if (_this.input.value() !== '' && _this.input.value() !== null) {
+          if ((_this.currentSignal == null) || _this.currentSignal.fn !== _this.input.value()) {
+            try {
+              return _this.add(new Signal(_this.input.value(), _this.samplerate));
+            } catch (_error) {
+              e = _error;
+            }
           }
         }
       };

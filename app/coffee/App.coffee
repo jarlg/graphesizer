@@ -170,10 +170,6 @@ class App
             @dragging = true
             if not @currentSignal.window.focused
                 @startDrag(event)
-                if @sidebar? and @sidebar.signals[-1] != @currentSignal
-                    @sidebar.add(@currentSignal)
-                else if @signalHistory[-1] != @currentSignal
-                    @signalHistory.push(@currentSignal)
             else
                 if Math.abs(@fromX() - event.x) < Math.abs(@toX() - event.x)
                     tmpTo = @currentSignal.window.to
@@ -185,6 +181,12 @@ class App
         if @currentSignal?
             if @dragging
                 @dragging = false
+                if @currentSignal.window.to != @currentSignal.window.from
+                    if @sidebar?
+                        if @sidebar.signals.length == 0 or @sidebar.signals[@sidebar.signals.length-1] != @currentSignal
+                            @sidebar.add(@currentSignal)
+                    else if @signalHistory.length == 0 or @signalHistory[@signalHistory.length-1] != @currentSignal
+                        @signalHistory.push(@currentSignal)
                 @endDrag(event)
             @currentSignal.play(@audioCtx, @gain)
         @
@@ -233,9 +235,10 @@ class App
 
     bindInput: (@input) ->
         @input.addEventListener('keyup', ( (event) => 
-            if not @currentSignal? or @currentSignal.fn != @input.value()
-                try @add(new Signal(@input.value(), @samplerate))
-                catch e
+            if @input.value() != '' and @input.value() != null
+                if not @currentSignal? or @currentSignal.fn != @input.value()
+                    try @add(new Signal(@input.value(), @samplerate))
+                    catch e
         ))
         @
 
