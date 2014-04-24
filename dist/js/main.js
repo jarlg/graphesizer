@@ -266,7 +266,8 @@ App = (function() {
       this.zoom += event.deltaY / 10;
     } else if (this.zoom >= 0) {
       this.zoom += event.deltaY / 100;
-    } else {
+    }
+    if (this.zoom < 0) {
       this.zoom = 0;
     }
     return this.draw();

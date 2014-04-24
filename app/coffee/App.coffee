@@ -197,7 +197,7 @@ class App
             @zoom += event.deltaY / 10
         else if @zoom >= 0
             @zoom += event.deltaY / 100
-        else
+        if @zoom < 0
             @zoom = 0
         @draw()
 
