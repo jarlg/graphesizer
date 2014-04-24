@@ -18,3 +18,10 @@ DESIGN
 
 IDEAS
     * mirror sample area around an x value (highest x value of selection)
+
+STRUCTURE
+    * SIGNAL is a model
+    * GRAPH is a model / view
+    * APP is a view / controller
+    * INPUT is a controller
+    * SIDEBAR is a view

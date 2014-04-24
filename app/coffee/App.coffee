@@ -1,7 +1,7 @@
 "use strict"
 
 math = require('mathjs')()
-Signal = require('./Signal.coffee')
+Signal = require './Signal.coffee'
 
 class App
     constructor: (@canvas, @samplerate) ->
@@ -22,20 +22,20 @@ class App
         @origoY = window.innerHeight / 2
 
         @audioCtx = new webkitAudioContext()
-        @ctx = canvas.getContext("2d")
+        @ctx = canvas.getContext "2d"
 
-        @canvas.addEventListener('mousedown',  ( (event) => @mousedownHandler(event) ))
-        @canvas.addEventListener('mouseup',    ( (event) => @mouseupHandler(event) ))
-        @canvas.addEventListener('mousewheel', ( (event) => @scrollHandler(event) ))
-        @canvas.addEventListener('dblclick',   ( (event) => @dblclickHandler(event) ))
-        @canvas.addEventListener('mousemove',  ( (event) => @mousemoveHandler(event) ))
+        @canvas.addEventListener 'mousedown',  (event) => @mousedownHandler event
+        @canvas.addEventListener 'mouseup',    (event) => @mouseupHandler event
+        @canvas.addEventListener 'mousewheel', (event) => @scrollHandler event
+        @canvas.addEventListener 'dblclick',   (event) => @dblclickHandler event
+        @canvas.addEventListener 'mousemove',  (event) => @mousemoveHandler event
 
         @initGain()
 
-    initGain: () ->
+    initGain: ->
         @gain = @audioCtx.createGain()
         @gain.gain.value = 0.5
-        @gain.connect(@audioCtx.destination)
+        @gain.connect @audioCtx.destination
         @
 
     setLineWidth: (lineWidth) ->
@@ -43,18 +43,18 @@ class App
         @
 
     setSignalColors: (@signalColors) -> @
-    fromX: () -> @secondsToGraphX(@currentSignal.window.from)
-    toX: () -> @secondsToGraphX(@currentSignal.window.to)
+    fromX: -> @secondsToGraphX(@currentSignal.window.from)
+    toX: -> @secondsToGraphX(@currentSignal.window.to)
         
     # we choose next color by cycling through @signalColors, using
     # index = (number of signals) % (number of colors)
-    nextColor: () ->
+    nextColor: ->
         nSignals = if @sidebar? then @sidebar.signals.length else @signalHistory.length
         @signalColors[nSignals % @signalColors.length]
 
     add: (signal) ->
         signal.color = @nextColor()
-        @draw(signal)
+        @draw signal
         @currentSignal.stop() if @currentSignal?
         @currentSignal = signal
 
@@ -62,25 +62,25 @@ class App
         @clear()
         expr = math.parse(signal.fn).compile(math)
         delta = @zoom / @canvas.width
-        scope = { x: @graphXToSeconds(0) }
-        @ctx.moveTo(0, expr.eval(scope))
+        scope =  x: @graphXToSeconds 0
+        @ctx.moveTo 0, expr.eval scope
         @ctx.beginPath()
         @ctx.strokeStyle = signal.color
         for i in [1 .. @ctx.canvas.width-1]
-            do (i) => 
+            do => 
                 scope.x += delta
-                @ctx.lineTo(i, @yZoom * expr.eval(scope) + @origoY)
+                @ctx.lineTo i, @yZoom * expr.eval(scope) + @origoY
         @ctx.stroke()
         @ctx.closePath()
         @drawOrigoIndicator()
         @drawEdgeIndicator()
-        @drawSelection(signal)
+        @drawSelection signal
 
     drawOrigoIndicator: () ->
         @ctx.beginPath()
         @ctx.strokeStyle = "#93a1a1"
-        @ctx.moveTo(@origoX, 0)
-        @ctx.lineTo(@origoX, 25)
+        @ctx.moveTo @origoX, 0
+        @ctx.lineTo @origoX, 25
         @ctx.stroke()
         @ctx.closePath()
         @
@@ -90,23 +90,23 @@ class App
         to = signal.window.to
         if to != from or @dragging
             @ctx.fillStyle = "rgba(238, 232, 213, 0.5)"
-            @ctx.fillRect( @secondsToGraphX(from)
-                         , 0
-                         , @secondsToGraphX(to) - @secondsToGraphX(from)
-                         , window.innerHeight)
-            @drawSelectionIndicators(signal)
-            @drawSelectionEdge(@secondsToGraphX(from), @selectionEdgeColor)
+            @ctx.fillRect @secondsToGraphX(from),
+                          0,
+                          @secondsToGraphX(to) - @secondsToGraphX(from),
+                          window.innerHeight
+            @drawSelectionIndicators signal 
+            @drawSelectionEdge @secondsToGraphX(from), @selectionEdgeColor
             if @dragging or signal.window.focused
-                @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeFocusColor)
+                @drawSelectionEdge @secondsToGraphX(to), @selectionEdgeFocusColor
             else
-                @drawSelectionEdge(@secondsToGraphX(to), @selectionEdgeColor)
+                @drawSelectionEdge @secondsToGraphX(to), @selectionEdgeColor
         @
 
     drawSelectionEdge: (x, color) ->
             @ctx.beginPath()
             @ctx.strokeStyle = color
-            @ctx.moveTo(x, 0)
-            @ctx.lineTo(x, window.innerHeight)
+            @ctx.moveTo x, 0
+            @ctx.lineTo x, window.innerHeight
             @ctx.stroke()
             @ctx.closePath()
             @
@@ -134,20 +134,20 @@ class App
             toX += if toX > lMargin then leftOffset else rightOffset
             if fromX - toX < 80 then fromY = 60 else fromY = 30
             toY = 30
-        @ctx.fillText( signal.window.from.toFixed(2) + 's'
-                     , fromX
-                     , fromY)
-        @ctx.fillText( signal.window.to.toFixed(2) + 's'
-                     , toX
-                     , toY)
+        @ctx.fillText signal.window.from.toFixed(2) + 's',
+                      fromX,
+                      fromY
+        @ctx.fillText signal.window.to.toFixed(2) + 's',
+                      toX,
+                      toY
         @
 
-    drawEdgeIndicator: () ->
+    drawEdgeIndicator: ->
         @ctx.font = "20pt Georgia"
         @ctx.fillStyle = "#586e75"
-        @ctx.fillText( @graphXToSeconds(window.innerWidth).toFixed(1) + 's'
-                     , window.innerWidth - 80
-                     , window.innerHeight - 20)
+        @ctx.fillText @graphXToSeconds(window.innerWidth).toFixed(1) + 's',
+                      window.innerWidth - 80,
+                      window.innerHeight - 20
         @
 
     secondsToGraphX: (s) ->
@@ -169,12 +169,10 @@ class App
         if @currentSignal?
             @dragging = true
             if not @currentSignal.window.focused
-                @startDrag(event)
+                @startDrag event
             else
                 if Math.abs(@fromX() - event.x) < Math.abs(@toX() - event.x)
-                    tmpTo = @currentSignal.window.to
-                    @currentSignal.window.to = @currentSignal.window.from
-                    @currentSignal.window.from = tmpTo
+                    [@currentSignal.window.to, @currentSignal.window.from] = [@currentSignal.window.from, @currentSignal.window.to]
         @
 
     mouseupHandler: (event) ->
@@ -184,11 +182,11 @@ class App
                 if @currentSignal.window.to != @currentSignal.window.from
                     if @sidebar?
                         if @sidebar.signals.length == 0 or @sidebar.signals[@sidebar.signals.length-1] != @currentSignal
-                            @sidebar.add(@currentSignal)
+                            @sidebar.add @currentSignal
                     else if @signalHistory.length == 0 or @signalHistory[@signalHistory.length-1] != @currentSignal
-                        @signalHistory.push(@currentSignal)
-                @endDrag(event)
-            @currentSignal.play(@audioCtx, @gain)
+                        @signalHistory.push @currentSignal
+                @endDrag event
+            @currentSignal.play @audioCtx, @gain
         @
 
     scrollHandler: (event) ->
@@ -204,11 +202,11 @@ class App
         @draw()
 
     startDrag: (event) ->
-        @currentSignal.startWindowSelection(@graphXToSeconds(event.x))
+        @currentSignal.startWindowSelection @graphXToSeconds(event.x)
         @draw()
 
     endDrag: (event) ->
-        @currentSignal.endWindowSelection(@graphXToSeconds(event.x))
+        @currentSignal.endWindowSelection @graphXToSeconds(event.x)
         @draw()
 
     mousemoveHandler: (event) ->
@@ -219,9 +217,9 @@ class App
                 if not @currentSignal.window.focused
                     @currentSignal.window.focused = true
                     if Math.abs(@toX() - event.x) < Math.abs(@fromX() - event.x)
-                        @drawSelectionEdge(@toX(), @selectionEdgeFocusColor)
+                        @drawSelectionEdge @toX(), @selectionEdgeFocusColor
                     else
-                        @drawSelectionEdge(@fromX(), @selectionEdgeFocusColor)
+                        @drawSelectionEdge @fromX(), @selectionEdgeFocusColor
             else if @currentSignal.window.focused
                 @currentSignal.window.focused = false
                 @draw()
@@ -234,15 +232,14 @@ class App
         false
 
     bindInput: (@input) ->
-        @input.addEventListener('keyup', ( (event) => 
+        @input.addEventListener 'keyup', (event) => 
             if @input.value() != '' and @input.value() != null
                 if not @currentSignal? or @currentSignal.fn != @input.value()
-                    try @add(new Signal(@input.value(), @samplerate))
+                    try @add new Signal(@input.value(), @samplerate)
                     catch e
-        ))
         @
 
-    clear: () ->
+    clear: ->
         @canvas.height = @canvas.height
         @
 

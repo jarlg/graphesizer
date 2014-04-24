@@ -25,31 +25,31 @@ App = (function() {
     this.origoY = window.innerHeight / 2;
     this.audioCtx = new webkitAudioContext();
     this.ctx = canvas.getContext("2d");
-    this.canvas.addEventListener('mousedown', ((function(_this) {
+    this.canvas.addEventListener('mousedown', (function(_this) {
       return function(event) {
         return _this.mousedownHandler(event);
       };
-    })(this)));
-    this.canvas.addEventListener('mouseup', ((function(_this) {
+    })(this));
+    this.canvas.addEventListener('mouseup', (function(_this) {
       return function(event) {
         return _this.mouseupHandler(event);
       };
-    })(this)));
-    this.canvas.addEventListener('mousewheel', ((function(_this) {
+    })(this));
+    this.canvas.addEventListener('mousewheel', (function(_this) {
       return function(event) {
         return _this.scrollHandler(event);
       };
-    })(this)));
-    this.canvas.addEventListener('dblclick', ((function(_this) {
+    })(this));
+    this.canvas.addEventListener('dblclick', (function(_this) {
       return function(event) {
         return _this.dblclickHandler(event);
       };
-    })(this)));
-    this.canvas.addEventListener('mousemove', ((function(_this) {
+    })(this));
+    this.canvas.addEventListener('mousemove', (function(_this) {
       return function(event) {
         return _this.mousemoveHandler(event);
       };
-    })(this)));
+    })(this));
     this.initGain();
   }
 
@@ -108,13 +108,13 @@ App = (function() {
     this.ctx.beginPath();
     this.ctx.strokeStyle = signal.color;
     _fn = (function(_this) {
-      return function(i) {
+      return function() {
         scope.x += delta;
         return _this.ctx.lineTo(i, _this.yZoom * expr["eval"](scope) + _this.origoY);
       };
     })(this);
     for (i = _i = 1, _ref = this.ctx.canvas.width - 1; 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
-      _fn(i);
+      _fn();
     }
     this.ctx.stroke();
     this.ctx.closePath();
@@ -225,7 +225,7 @@ App = (function() {
   };
 
   App.prototype.mousedownHandler = function(event) {
-    var tmpTo;
+    var _ref;
     event.preventDefault();
     if (this.currentSignal != null) {
       this.dragging = true;
@@ -233,9 +233,7 @@ App = (function() {
         this.startDrag(event);
       } else {
         if (Math.abs(this.fromX() - event.x) < Math.abs(this.toX() - event.x)) {
-          tmpTo = this.currentSignal.window.to;
-          this.currentSignal.window.to = this.currentSignal.window.from;
-          this.currentSignal.window.from = tmpTo;
+          _ref = [this.currentSignal.window.from, this.currentSignal.window.to], this.currentSignal.window.to = _ref[0], this.currentSignal.window.from = _ref[1];
         }
       }
     }
@@ -320,7 +318,7 @@ App = (function() {
 
   App.prototype.bindInput = function(input) {
     this.input = input;
-    this.input.addEventListener('keyup', ((function(_this) {
+    this.input.addEventListener('keyup', (function(_this) {
       return function(event) {
         var e;
         if (_this.input.value() !== '' && _this.input.value() !== null) {
@@ -333,7 +331,7 @@ App = (function() {
           }
         }
       };
-    })(this)));
+    })(this));
     return this;
   };
 
@@ -503,12 +501,12 @@ Signal = (function() {
     buffer = ctx.createBuffer(1, this.samples.length, this.samplerate);
     data = buffer.getChannelData(0);
     _fn = (function(_this) {
-      return function(i) {
+      return function() {
         return data[i] = _this.samples[i];
       };
     })(this);
     for (i = _i = 0, _ref = this.samples.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
-      _fn(i);
+      _fn();
     }
     this.source = ctx.createBufferSource();
     this.source.loop = true;
