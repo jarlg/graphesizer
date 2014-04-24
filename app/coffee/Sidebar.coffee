@@ -1,57 +1,13 @@
 "use strict"
 
 class Sidebar
-    constructor: (@sidebar, @width, @hidden=true) ->
+    constructor: (@view, @hidden=true) ->
         @signals = []
-        @sidebar.style.width = @width + "px"
-        @signalList = document.createElement('ul')
-        @sidebar.appendChild(@signalList)
-            .className = "sidebar-signal-list"
-        @hiddenWidth = 55
-        if @hidden
-            @hide()
-        else
-            @show()
-
-    bindButton: (@button) ->
-        @button.innerHTML = if @hidden then ">>" else "<<"
-        @button.addEventListener('click', ( (event) => @toggle() ))
-
-    toggle: () ->
-        @hidden = not @hidden
-        @button.innerHTML = if @hidden then ">>" else "<<"
-        if @hidden
-            @hide()
-        else
-            @show()
-
-    show: () ->
-        @sidebar.style.left = 0 + "px"
-        @
-
-    hide: () ->
-        @sidebar.style.left = (@hiddenWidth - @width) + "px"
-        @
+        @view.update(@)
 
     add: (signal) ->
-        @signalList.insertBefore(@makeEntry(signal), @signalList.firstChild)
         @signals.push(signal)
-        @
-
-    makeEntry: (signal) ->
-        entry = document.createElement('li')
-        title = document.createTextNode(signal.fn)
-
-        toggles = document.createElement('div')
-        toggles.style.background = signal.color
-        txt = document.createTextNode('')
-        toggles.appendChild(txt)
-
-        entry.appendChild(title)
-        entry.appendChild(toggles)
-            .className = 'sidebar-signal-toggle'
-        entry.className = 'sidebar-signal'
-        entry
+        @view.add signal
 
 
 module.exports = Sidebar

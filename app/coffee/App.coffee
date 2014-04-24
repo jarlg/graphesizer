@@ -2,12 +2,17 @@
 
 math = require('mathjs')()
 Signal = require './Signal.coffee'
+GraphView = require 'GraphView.coffee'
+Graph = require 'Graph.coffee'
 
 class App
     constructor: (@canvas, @samplerate) ->
         @currentSignal = null
         @signalHistory = []
         @signalColors = []
+
+        @GView = new GraphView(@canvas, @)
+        @Graph = new Graph(@GView)
 
         @audioCtx = new webkitAudioContext()
 
@@ -26,17 +31,15 @@ class App
         @
 
     setLineWidth: (lineWidth) ->
-        @ctx.lineWidth = lineWidth
+        @GView.ctx.lineWidth = lineWidth
         @
 
     setSignalColors: (@signalColors) -> @
-    fromX: -> @secondsToGraphX(@currentSignal.window.from)
-    toX: -> @secondsToGraphX(@currentSignal.window.to)
         
     # we choose next color by cycling through @signalColors, using
     # index = (number of signals) % (number of colors)
     nextColor: ->
-        nSignals = if @sidebar? then @sidebar.signals.length else @signalHistory.length
+        nSignals = if @Sidebar? then @Sidebar.signals.length else @signalHistory.length
         @signalColors[nSignals % @signalColors.length]
 
     add: (signal) ->
@@ -69,9 +72,9 @@ class App
             if @dragging
                 @dragging = false
                 if @currentSignal.window.to != @currentSignal.window.from
-                    if @sidebar?
-                        if @sidebar.signals.length == 0 or @sidebar.signals[@sidebar.signals.length-1] != @currentSignal
-                            @sidebar.add @currentSignal
+                    if @Sidebar?
+                        if @Sidebar.signals.length == 0 or @Sidebar.signals[@Sidebar.signals.length-1] != @currentSignal
+                            @Sidebar.add @currentSignal
                     else if @signalHistory.length == 0 or @signalHistory[@signalHistory.length-1] != @currentSignal
                         @signalHistory.push @currentSignal
                 @endDrag event

@@ -3,7 +3,7 @@
 math = require('mathjs')()
 
 class Graph
-    constructor: ->
+    constructor: (@view) ->
         @origoX = window.innerWidth / 2
         @origoY = window.innerHeight / 2
 
@@ -12,6 +12,8 @@ class Graph
 
         @zoom  = 1 # s onscreen
         @zoomY = 180 # height in px corresponding to amp 1 in signal
+
+        @view.update @
         @
 
     options:
@@ -36,6 +38,18 @@ class Graph
             if @_dist(@selection.from, x) < @options.hoverMargin
                 return @selection.from
         null
+
+    setZoom: (@zoom) ->
+        @view.update @
+
+    setSelection: (@selection) ->
+        @view.update @
+
+    setDragging: (@dragging) ->
+        @view.update @
+
+    setOrigoX: (@origoX) ->
+        @view.update @
 
 
 module.exports = Graph
