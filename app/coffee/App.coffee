@@ -55,10 +55,6 @@ class App
     add: (signal) ->
         signal.color = @nextColor()
         @draw(signal)
-        if @sidebar?
-            @sidebar.add(signal)
-        else
-            @signalHistory.push(signal)
         @currentSignal.stop() if @currentSignal?
         @currentSignal = signal
 
@@ -174,6 +170,10 @@ class App
             @dragging = true
             if not @currentSignal.window.focused
                 @startDrag(event)
+                if @sidebar? and @sidebar.signals[-1] != @currentSignal
+                    @sidebar.add(@currentSignal)
+                else if @signalHistory[-1] != @currentSignal
+                    @signalHistory.push(@currentSignal)
             else
                 if Math.abs(@fromX() - event.x) < Math.abs(@toX() - event.x)
                     tmpTo = @currentSignal.window.to

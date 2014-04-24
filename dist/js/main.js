@@ -87,11 +87,6 @@ App = (function() {
   App.prototype.add = function(signal) {
     signal.color = this.nextColor();
     this.draw(signal);
-    if (this.sidebar != null) {
-      this.sidebar.add(signal);
-    } else {
-      this.signalHistory.push(signal);
-    }
     if (this.currentSignal != null) {
       this.currentSignal.stop();
     }
@@ -236,6 +231,11 @@ App = (function() {
       this.dragging = true;
       if (!this.currentSignal.window.focused) {
         this.startDrag(event);
+        if ((this.sidebar != null) && this.sidebar.signals[-1] !== this.currentSignal) {
+          this.sidebar.add(this.currentSignal);
+        } else if (this.signalHistory[-1] !== this.currentSignal) {
+          this.signalHistory.push(this.currentSignal);
+        }
       } else {
         if (Math.abs(this.fromX() - event.x) < Math.abs(this.toX() - event.x)) {
           tmpTo = this.currentSignal.window.to;
