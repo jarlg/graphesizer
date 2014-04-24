@@ -39,7 +39,7 @@ class Signal
         buffer = ctx.createBuffer(1, @samples.length, @samplerate)
         data = buffer.getChannelData(0)
         for i in [0 .. @samples.length-1]
-            do (i) => 
+            do () => 
                 data[i] = @samples[i]
         @source = ctx.createBufferSource()
         @source.loop = true
