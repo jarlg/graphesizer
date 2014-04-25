@@ -10,6 +10,7 @@ class Audio
         @gain.connect @ctx.destination
 
     update: (signal) ->
+        @stop()
         @createBufferSource signal.sample(@app.samplerate)
 
     createBufferSource: (samples) ->

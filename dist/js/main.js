@@ -15,9 +15,10 @@ Sidebar = require('./Sidebar.coffee');
 SidebarView = require('./SidebarView.coffee');
 
 App = (function() {
-  function App(canvas, sidebar, input, samplerate) {
+  function App(canvas, sidebar, input, samplerate, debug) {
     this.input = input;
     this.samplerate = samplerate;
+    this.debug = debug != null ? debug : false;
     this.signal = null;
     this.signalColors = [];
     this.graph = new Graph(canvas, this);
@@ -124,7 +125,9 @@ App = (function() {
           });
         } catch (_error) {
           e = _error;
-          console.log(e);
+          if (this.debug) {
+            console.log(e);
+          }
           return this.signal.update(oldSignalState);
         }
       } else {
@@ -132,7 +135,9 @@ App = (function() {
           return this.signal = new Signal(this.input.value, this.audio, this.graph);
         } catch (_error) {
           e = _error;
-          console.log(e);
+          if (this.debug) {
+            console.log(e);
+          }
           return this.signal = null;
         }
       }
@@ -154,13 +159,12 @@ App = (function() {
   App.prototype.endDrag = function(event) {
     if (this.signal != null) {
       this.graph.dragging = false;
-      this.signal.update({
+      return this.signal.update({
         window: {
           to: this.graph.xToSeconds(event.x),
           from: this.signal.window.from
         }
       });
-      return this.audio.play();
     }
   };
 
@@ -203,6 +207,7 @@ Audio = (function() {
   }
 
   Audio.prototype.update = function(signal) {
+    this.stop();
     return this.createBufferSource(signal.sample(this.app.samplerate));
   };
 
@@ -615,7 +620,8 @@ Signal = (function() {
       _fn();
     }
     if (updateView) {
-      return this.updateViews();
+      this.updateViews();
+      return this.audioView.play();
     }
   };
 

@@ -11,7 +11,7 @@ Sidebar = require './Sidebar.coffee'
 SidebarView = require './SidebarView.coffee'
 
 class App
-    constructor: (canvas, sidebar, @input, @samplerate) ->
+    constructor: (canvas, sidebar, @input, @samplerate, @debug=false) ->
         @signal = null
         @signalColors = []
 
@@ -67,12 +67,12 @@ class App
                     @signal.update
                                 fn: @input.value
                 catch e
-                    console.log e
+                    console.log e if @debug
                     @signal.update oldSignalState
             else
                 try @signal = new Signal @input.value, @audio, @graph
                 catch e
-                    console.log e
+                    console.log e if @debug
                     @signal = null
 
     # dragging is changing @signal.window.to on mousemove
@@ -93,7 +93,6 @@ class App
                         window: 
                             to: @graph.xToSeconds event.x
                             from: @signal.window.from
-            @audio.play()
 
     zoom: (event) ->
         if @signal?

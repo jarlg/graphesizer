@@ -21,7 +21,7 @@ IDEAS
 
 STRUCTURE
     * SIGNAL is a model
-    * GRAPH is a model / view
-    * APP is a view / controller
-    * INPUT is a controller
-    * SIDEBAR is a view
+    * GRAPH is a view for SIGNAL
+    * AUDIO is a view for SIGNAL
+    * APP is a controller
+    * SIDEBAR is a view and model (replace with a collection of signals? and just a view)

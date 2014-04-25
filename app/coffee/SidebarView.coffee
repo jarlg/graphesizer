@@ -22,15 +22,15 @@ class SidebarView
     add: (signal) ->
         @signalList.insertBefore @makeEntry(signal), @signalList.firstChild
 
-    show: () ->
+    show: ->
         @button.innerHTML = '<<'
         @el.style.left = "0px"
 
-    hide: () ->
+    hide: ->
         @button.innerHTML = '>>'
         @el.style.left = (@hiddenWidth - @width) + "px"
 
-    toggle: () ->
+    toggle: ->
         @app.sidebar.hidden = not @app.sidebar.hidden
         if @app.sidebar.hidden
             @hide()
