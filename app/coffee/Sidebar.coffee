@@ -3,10 +3,10 @@
 class Sidebar
     constructor: (@view, @hidden=true) ->
         @signals = []
-        @view.update(@)
+        @view.update @
 
     add: (signal) ->
-        @signals.push(signal)
+        @signals.push signal
         @view.add signal
 
 

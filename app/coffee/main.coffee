@@ -1,8 +1,6 @@
-"use strict"
+'use strict'
 
-App = require('./App.coffee')
-Input = require('./Input.coffee')
-Sidebar = require('./Sidebar.coffee')
+App = require './AppController.coffee'
 
 # let's you write $('#graph') instead of document.querySelector('#graph')
 $ = document.querySelector.bind(document)
@@ -10,10 +8,7 @@ $ = document.querySelector.bind(document)
 # conf
 samplerate = 48000
 
-app = new App($('#graph'), samplerate)
-app.sidebar = new Sidebar($('#sidebar'), 250)
-app.sidebar.bindButton($('#sidebar-toggle'))
-app.bindInput(new Input($('#fn-input')))
+app = new App($('#graph'), $('#sidebar'), $('#fn-input'), samplerate)
 
 app.setSignalColors(["#b58900",    #"yellow"  
                      "#dc322f",    #"red"     

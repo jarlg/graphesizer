@@ -1,20 +1,28 @@
 "use strict"
 
 math = require('mathjs')()
+
 Signal = require './Signal.coffee'
-GraphView = require 'GraphView.coffee'
-Graph = require 'Graph.coffee'
+Audio = require './Audio.coffee'
+
+GraphView = require './GraphView.coffee'
+Graph = require './Graph.coffee'
+
+Sidebar = require './Sidebar.coffee'
+SidebarView = require './SidebarView.coffee'
 
 class App
-    constructor: (@canvas, @samplerate) ->
+    constructor: (@canvas, sidebar, @samplerate) ->
         @currentSignal = null
-        @signalHistory = []
         @signalColors = []
 
-        @GView = new GraphView(@canvas, @)
-        @Graph = new Graph(@GView)
+        @gView = new GraphView @canvas, @
+        @graph = new Graph @GView
 
-        @audioCtx = new webkitAudioContext()
+        @sidebarView = new SidebarView sidebar, @
+        @sidebar = new Sidebar @sidebarView
+
+        @audio = new Audio new webkitAudioContext(), @
 
         @canvas.addEventListener 'mousedown',  (event) => @mousedownHandler event
         @canvas.addEventListener 'mouseup',    (event) => @mouseupHandler event
@@ -22,25 +30,9 @@ class App
         @canvas.addEventListener 'dblclick',   (event) => @dblclickHandler event
         @canvas.addEventListener 'mousemove',  (event) => @mousemoveHandler event
 
-        @initGain()
-
-    initGain: ->
-        @gain = @audioCtx.createGain()
-        @gain.gain.value = 0.5
-        @gain.connect @audioCtx.destination
-        @
-
-    setLineWidth: (lineWidth) ->
-        @GView.ctx.lineWidth = lineWidth
-        @
-
+    setLineWidth: (lineWidth) -> @GView.ctx.lineWidth = lineWidth; 
     setSignalColors: (@signalColors) -> @
-        
-    # we choose next color by cycling through @signalColors, using
-    # index = (number of signals) % (number of colors)
-    nextColor: ->
-        nSignals = if @Sidebar? then @Sidebar.signals.length else @signalHistory.length
-        @signalColors[nSignals % @signalColors.length]
+    nextColor: -> @signalColors[@sidebar.signals.length % @signalColors.length]
 
     add: (signal) ->
         signal.color = @nextColor()

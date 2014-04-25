@@ -1,67 +1,42 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
-var App, Signal, math;
+var App, Audio, Graph, GraphView, Sidebar, SidebarView, Signal, math;
 
 math = require('mathjs')();
 
 Signal = require('./Signal.coffee');
 
+Audio = require('./Audio.coffee');
+
+GraphView = require('./GraphView.coffee');
+
+Graph = require('./Graph.coffee');
+
+Sidebar = require('./Sidebar.coffee');
+
+SidebarView = require('./SidebarView.coffee');
+
 App = (function() {
-  function App(canvas, samplerate) {
+  function App(canvas, sidebar, input, samplerate) {
     this.canvas = canvas;
+    this.input = input;
     this.samplerate = samplerate;
-    this.canvas.height = window.innerHeight;
-    this.canvas.width = window.innerWidth;
-    this.signalHistory = [];
     this.currentSignal = null;
     this.signalColors = [];
-    this.selectionEdgeColor = "#93a1a1";
-    this.selectionEdgeFocusColor = "#586e75";
-    this.hoverMargin = 20;
-    this.dragging = false;
-    this.zoom = 1;
-    this.yZoom = 160;
-    this.origoX = window.innerWidth / 2;
-    this.origoY = window.innerHeight / 2;
-    this.audioCtx = new webkitAudioContext();
-    this.ctx = canvas.getContext("2d");
-    this.canvas.addEventListener('mousedown', (function(_this) {
-      return function(event) {
-        return _this.mousedownHandler(event);
+    this.gView = new GraphView(this.canvas, this);
+    this.graph = new Graph(this.gView);
+    this.sidebarView = new SidebarView(sidebar, this);
+    this.sidebar = new Sidebar(this.sidebarView);
+    this.audio = new Audio(new webkitAudioContext(), this);
+    this.input.addEventListener('keydown', (function(_this) {
+      return function() {
+        return _this.updateCurrentSignal();
       };
     })(this));
-    this.canvas.addEventListener('mouseup', (function(_this) {
-      return function(event) {
-        return _this.mouseupHandler(event);
-      };
-    })(this));
-    this.canvas.addEventListener('mousewheel', (function(_this) {
-      return function(event) {
-        return _this.scrollHandler(event);
-      };
-    })(this));
-    this.canvas.addEventListener('dblclick', (function(_this) {
-      return function(event) {
-        return _this.dblclickHandler(event);
-      };
-    })(this));
-    this.canvas.addEventListener('mousemove', (function(_this) {
-      return function(event) {
-        return _this.mousemoveHandler(event);
-      };
-    })(this));
-    this.initGain();
   }
 
-  App.prototype.initGain = function() {
-    this.gain = this.audioCtx.createGain();
-    this.gain.gain.value = 0.5;
-    this.gain.connect(this.audioCtx.destination);
-    return this;
-  };
-
   App.prototype.setLineWidth = function(lineWidth) {
-    this.ctx.lineWidth = lineWidth;
+    this.gView.ctx.lineWidth = lineWidth;
     return this;
   };
 
@@ -70,39 +45,248 @@ App = (function() {
     return this;
   };
 
-  App.prototype.fromX = function() {
-    return this.secondsToGraphX(this.currentSignal.window.from);
-  };
-
-  App.prototype.toX = function() {
-    return this.secondsToGraphX(this.currentSignal.window.to);
-  };
-
   App.prototype.nextColor = function() {
-    var nSignals;
-    nSignals = this.sidebar != null ? this.sidebar.signals.length : this.signalHistory.length;
-    return this.signalColors[nSignals % this.signalColors.length];
+    return this.signalColors[this.sidebar.signals.length % this.signalColors.length];
   };
 
-  App.prototype.add = function(signal) {
-    signal.color = this.nextColor();
-    this.draw(signal);
-    if (this.currentSignal != null) {
-      this.currentSignal.stop();
+  App.prototype.validate = function(value) {
+    var e, expr;
+    try {
+      expr = math.parse(value).compile(math);
+      return true;
+    } catch (_error) {
+      e = _error;
+      return false;
     }
-    return this.currentSignal = signal;
   };
 
-  App.prototype.draw = function(signal) {
+  App.prototype.updateCurrentSignal = function() {
+    var e, oldSignalState;
+    if (this.validate(this.input.value)) {
+      if (this.currentSignal != null) {
+        oldSignalState = this.currentSignal.state();
+        try {
+          return this.currentSignal.update({
+            fn: this.input.value,
+            window: {
+              to: this.graph.selection.to,
+              from: this.graph.selection.from
+            }
+          });
+        } catch (_error) {
+          e = _error;
+          return this.currentSignal.update(oldSignalState);
+        }
+      } else {
+        try {
+          return this.currentSignal = new Signal(this.input.value, this.audio);
+        } catch (_error) {
+          e = _error;
+          return this.currentSignal = null;
+        }
+      }
+    }
+  };
+
+  return App;
+
+})();
+
+module.exports = App;
+
+
+},{"./Audio.coffee":2,"./Graph.coffee":3,"./GraphView.coffee":4,"./Sidebar.coffee":5,"./SidebarView.coffee":6,"./Signal.coffee":7}],2:[function(require,module,exports){
+'use strict';
+var Audio;
+
+Audio = (function() {
+  function Audio(ctx, app) {
+    this.ctx = ctx;
+    this.app = app;
+    this.playing = false;
+    this.source = null;
+    this.gain = this.ctx.createGain();
+    this.gain.gain.value = 0.5;
+    this.gain.connect(this.ctx.destination);
+  }
+
+  Audio.prototype.update = function(model) {
+    return this.createBufferSource(model.sample(this.app.samplerate));
+  };
+
+  Audio.prototype.createBufferSource = function(samples) {
+    var buffer, data, i, _fn, _i, _ref;
+    if (samples.length > 0) {
+      buffer = this.ctx.createBuffer(1, samples.length, this.app.samplerate);
+      data = buffer.getChannelData(0);
+      _fn = function(data, i, samples) {
+        return data[i] = samples[i];
+      };
+      for (i = _i = 0, _ref = samples.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        _fn(data, i, samples);
+      }
+      this.source = ctx.createBufferSource();
+      this.source.loop = true;
+      return this.source.buffer = buffer;
+    } else {
+      return this.source = null;
+    }
+  };
+
+  Audio.prototype.play = function() {
+    if ((this.source != null) && !this.playing) {
+      this.source.connect(this.gain);
+      this.source.noteOn(0);
+      return this.playing = true;
+    }
+  };
+
+  Audio.prototype.stop = function() {
+    if ((this.source != null) && this.playing) {
+      this.source.noteOff(0);
+    }
+    return this.playing = false;
+  };
+
+  return Audio;
+
+})();
+
+module.exports = Audio;
+
+
+},{}],3:[function(require,module,exports){
+'use strict';
+var Graph, math;
+
+math = require('mathjs')();
+
+Graph = (function() {
+  function Graph(view) {
+    this.view = view;
+    this.origoX = window.innerWidth / 2;
+    this.origoY = window.innerHeight / 2;
+    this.dragging = false;
+    this.selection = {
+      from: 0,
+      to: 0
+    };
+    this.zoom = 1;
+    this.zoomY = 180;
+    this.view.update(this);
+    this;
+  }
+
+  Graph.prototype.options = {
+    hoverMargin: 20,
+    selectionEdgeColor: "#93a1a1",
+    selectionEdgeFocusColor: "#586e75",
+    selectionFillColor: "rgba(238, 232, 213, 0.5)"
+  };
+
+  Graph.prototype.secondsToX = function(s) {
+    return ((s * this.canvas.width) / this.zoom) + this.origoX;
+  };
+
+  Graph.prototype.xToSeconds = function(x) {
+    return (x - this.origoX) * this.zoom / this.canvas.width;
+  };
+
+  Graph.prototype._dist = function(x1, x2) {
+    return Math.abs(x1 - x2);
+  };
+
+  Graph.prototype.hovering = function(x) {
+    if (this._dist(this.selection.to, x) < this._dist(this.selection.from, x)) {
+      if (this._dist(this.selection.to, x) < this.options.hoverMargin) {
+        return this.selection.to;
+      }
+    } else if (this.selection.to !== this.selection.from) {
+      if (this._dist(this.selection.from, x) < this.options.hoverMargin) {
+        return this.selection.from;
+      }
+    }
+    return null;
+  };
+
+  Graph.prototype.setZoom = function(zoom) {
+    this.zoom = zoom;
+    return this.view.update(this);
+  };
+
+  Graph.prototype.setSelection = function(selection) {
+    this.selection = selection;
+    return this.view.update(this);
+  };
+
+  Graph.prototype.setDragging = function(dragging) {
+    this.dragging = dragging;
+    return this.view.update(this);
+  };
+
+  Graph.prototype.setOrigoX = function(origoX) {
+    this.origoX = origoX;
+    return this.view.update(this);
+  };
+
+  return Graph;
+
+})();
+
+module.exports = Graph;
+
+
+},{}],4:[function(require,module,exports){
+'use strict';
+var GraphView, math;
+
+math = require('mathjs')();
+
+GraphView = (function() {
+  function GraphView(canvas, app) {
+    this.canvas = canvas;
+    this.app = app;
+    this.canvas.height = window.innerHeight;
+    this.canvas.width = window.innerWidth;
+    this.ctx = this.canvas.getContext("2d");
+    this;
+  }
+
+  GraphView.prototype.clear = function() {
+    return this.canvas.width = this.canvas.width;
+  };
+
+  GraphView.prototype.update = function(graph) {
+    if (this.app.currentSignal != null) {
+      return this.draw(this.app.currentSignal, graph);
+    }
+  };
+
+  GraphView.prototype.draw = function(signal, graph) {
+    var fromX, toX;
+    toX = graph.secondsToX(graph.selection.to);
+    fromX = graph.secondsToX(graph.selection.from);
+    this.drawSignal(signal, graph.zoom, graph.zoomY, graph.origoX, graph.origoY);
+    this.drawTotalSecondsOnScreen(graph.xToSeconds(window.innerWidth + graph.origoX));
+    this.drawOrigoIndicator(graph.origoX);
+    this.drawSelection(toX, fromX, graph.dragging, graph.options);
+    this.drawSelectionText(!this.app.sidebar.hidden, graph.selection.from, graph.selection.to, fromX, toX);
+    if (graph.dragging) {
+      this.drawSelectionEdge(fromX, false, graph.options);
+      this.drawSelectionEdge(toX, true, graph.options);
+    } else {
+      this.drawSelectionEdge(fromX, graph.hovering(fromX, graph.options));
+      this.drawSelectionEdge(toX, graph.hovering(toX, graph.options));
+    }
+    return this;
+  };
+
+  GraphView.prototype.drawSignal = function(signal, zoom, zoomY, origoX, origoY) {
     var delta, expr, i, scope, _fn, _i, _ref;
-    if (signal == null) {
-      signal = this.currentSignal;
-    }
-    this.clear();
     expr = math.parse(signal.fn).compile(math);
-    delta = this.zoom / this.canvas.width;
+    delta = zoom / this.canvas.width;
     scope = {
-      x: this.graphXToSeconds(0)
+      x: origoX
     };
     this.ctx.moveTo(0, expr["eval"](scope));
     this.ctx.beginPath();
@@ -110,7 +294,7 @@ App = (function() {
     _fn = (function(_this) {
       return function() {
         scope.x += delta;
-        return _this.ctx.lineTo(i, _this.yZoom * expr["eval"](scope) + _this.origoY);
+        return _this.ctx.lineTo(i, zoomY * expr["eval"](scope) + origoY);
       };
     })(this);
     for (i = _i = 1, _ref = this.ctx.canvas.width - 1; 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
@@ -118,64 +302,69 @@ App = (function() {
     }
     this.ctx.stroke();
     this.ctx.closePath();
-    this.drawOrigoIndicator();
-    this.drawEdgeIndicator();
-    return this.drawSelection(signal);
+    return this;
   };
 
-  App.prototype.drawOrigoIndicator = function() {
+  GraphView.prototype.drawTotalSecondsOnScreen = function(seconds) {
+    this.ctx.font = "20pt Georgia";
+    this.ctx.fillStyle = "#586e75";
+    this.ctx.fillText(seconds.toFixed(1) + 's', window.innerWidth - 80, window.innerHeight - 20);
+    return this;
+  };
+
+  GraphView.prototype.drawOrigoIndicator = function(origoX) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = "#93a1a1";
-    this.ctx.moveTo(this.origoX, 0);
-    this.ctx.lineTo(this.origoX, 25);
+    this.ctx.moveTo(origoX, 0);
+    this.ctx.lineTo(origoX, 25);
     this.ctx.stroke();
     this.ctx.closePath();
     return this;
   };
 
-  App.prototype.drawSelection = function(signal) {
-    var from, to;
-    from = signal.window.from;
-    to = signal.window.to;
-    if (to !== from || this.dragging) {
-      this.ctx.fillStyle = "rgba(238, 232, 213, 0.5)";
-      this.ctx.fillRect(this.secondsToGraphX(from), 0, this.secondsToGraphX(to) - this.secondsToGraphX(from), window.innerHeight);
-      this.drawSelectionIndicators(signal);
-      this.drawSelectionEdge(this.secondsToGraphX(from), this.selectionEdgeColor);
-      if (this.dragging || signal.window.focused) {
-        this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeFocusColor);
-      } else {
-        this.drawSelectionEdge(this.secondsToGraphX(to), this.selectionEdgeColor);
-      }
+  GraphView.prototype.drawSelection = function(toX, fromX, dragging, options) {
+    if (toX !== fromX || dragging) {
+      this.ctx.fillStyle = options.selectionFillColor;
+      this.ctx.fillRect(fromX, 0, toX - fromX, window.innerHeight);
     }
     return this;
   };
 
-  App.prototype.drawSelectionEdge = function(x, color) {
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = color;
-    this.ctx.moveTo(x, 0);
-    this.ctx.lineTo(x, window.innerHeight);
-    this.ctx.stroke();
-    this.ctx.closePath();
-    return this;
+  GraphView.prototype.drawSelectionEdge = function(x, hovering, options) {
+    if (hovering != null) {
+      this.ctx.beginPath();
+      if (hovering) {
+        this.ctx.strokeStyle = options.selectionEdgeFocusColor;
+      } else {
+        this.ctx.strokeStyle = options.selectionEdgeColor;
+      }
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, window.innerHeight);
+      this.ctx.stroke();
+      return this.ctx.closePath();
+    }
   };
 
-  App.prototype.drawSelectionIndicators = function(signal) {
-    var fromX, fromY, lMargin, leftOffset, rMargin, rightOffset, toX, toY;
+  GraphView;
+
+  return GraphView;
+
+})();
+
+({
+  drawSelectionText: function(sidebarShowing, from, to, fromX, toX) {
+    var fromY, lMargin, leftOffset, rMargin, rightOffset, toY;
     this.ctx.font = "20pt Georgia";
     this.ctx.fillStyle = "#586e75";
     leftOffset = -95;
     rightOffset = 20;
-    if (this.sidebar != null) {
-      lMargin = this.sidebar.hidden ? 150 : 350;
+    if (sidebarShowing != null) {
+      lMargin = sidebarShowing ? 350 : 150;
     } else {
       lMargin = 100;
     }
     rMargin = 100;
-    fromX = this.fromX();
-    toX = this.toX();
-    if (signal.window.from < signal.window.to) {
+    if (from < to) {
       fromX += fromX > lMargin ? leftOffset : rightOffset;
       toX += window.innerWidth - toX > rMargin ? rightOffset : leftOffset;
       if (toX - fromX < 80) {
@@ -194,240 +383,93 @@ App = (function() {
       }
       toY = 30;
     }
-    this.ctx.fillText(signal.window.from.toFixed(2) + 's', fromX, fromY);
-    this.ctx.fillText(signal.window.to.toFixed(2) + 's', toX, toY);
+    this.ctx.fillText(from.toFixed(2) + 's', fromX, fromY);
+    this.ctx.fillText(to.toFixed(2) + 's', toX, toY);
     return this;
-  };
-
-  App.prototype.drawEdgeIndicator = function() {
-    this.ctx.font = "20pt Georgia";
-    this.ctx.fillStyle = "#586e75";
-    this.ctx.fillText(this.graphXToSeconds(window.innerWidth).toFixed(1) + 's', window.innerWidth - 80, window.innerHeight - 20);
-    return this;
-  };
-
-  App.prototype.secondsToGraphX = function(s) {
-    return ((s * this.canvas.width) / this.zoom) + this.origoX;
-  };
-
-  App.prototype.graphXToSeconds = function(x) {
-    return (x - this.origoX) * this.zoom / this.canvas.width;
-  };
-
-  App.prototype.dblclickHandler = function(event) {
-    event.preventDefault();
-    if (this.currentSignal != null) {
-      this.origoX = event.x;
-      this.dragging = false;
-      this.draw();
-    }
-    return this;
-  };
-
-  App.prototype.mousedownHandler = function(event) {
-    var _ref;
-    event.preventDefault();
-    if (this.currentSignal != null) {
-      this.dragging = true;
-      if (!this.currentSignal.window.focused) {
-        this.startDrag(event);
-      } else {
-        if (Math.abs(this.fromX() - event.x) < Math.abs(this.toX() - event.x)) {
-          _ref = [this.currentSignal.window.from, this.currentSignal.window.to], this.currentSignal.window.to = _ref[0], this.currentSignal.window.from = _ref[1];
-        }
-      }
-    }
-    return this;
-  };
-
-  App.prototype.mouseupHandler = function(event) {
-    if (this.currentSignal != null) {
-      if (this.dragging) {
-        this.dragging = false;
-        if (this.currentSignal.window.to !== this.currentSignal.window.from) {
-          if (this.sidebar != null) {
-            if (this.sidebar.signals.length === 0 || this.sidebar.signals[this.sidebar.signals.length - 1] !== this.currentSignal) {
-              this.sidebar.add(this.currentSignal);
-            }
-          } else if (this.signalHistory.length === 0 || this.signalHistory[this.signalHistory.length - 1] !== this.currentSignal) {
-            this.signalHistory.push(this.currentSignal);
-          }
-        }
-        this.endDrag(event);
-      }
-      this.currentSignal.play(this.audioCtx, this.gain);
-    }
-    return this;
-  };
-
-  App.prototype.scrollHandler = function(event) {
-    event.preventDefault();
-    if (this.zoom > 10) {
-      this.zoom += event.deltaY;
-    } else if (this.zoom > 1) {
-      this.zoom += event.deltaY / 10;
-    } else if (this.zoom >= 0) {
-      this.zoom += event.deltaY / 100;
-    }
-    if (this.zoom < 0) {
-      this.zoom = 0;
-    }
-    return this.draw();
-  };
-
-  App.prototype.startDrag = function(event) {
-    this.currentSignal.startWindowSelection(this.graphXToSeconds(event.x));
-    return this.draw();
-  };
-
-  App.prototype.endDrag = function(event) {
-    this.currentSignal.endWindowSelection(this.graphXToSeconds(event.x));
-    return this.draw();
-  };
-
-  App.prototype.mousemoveHandler = function(event) {
-    if (this.currentSignal != null) {
-      if (this.dragging) {
-        this.endDrag(event);
-      }
-      if (this.nearSelectionEdge(event.x)) {
-        if (!this.currentSignal.window.focused) {
-          this.currentSignal.window.focused = true;
-          if (Math.abs(this.toX() - event.x) < Math.abs(this.fromX() - event.x)) {
-            this.drawSelectionEdge(this.toX(), this.selectionEdgeFocusColor);
-          } else {
-            this.drawSelectionEdge(this.fromX(), this.selectionEdgeFocusColor);
-          }
-        }
-      } else if (this.currentSignal.window.focused) {
-        this.currentSignal.window.focused = false;
-        this.draw();
-      }
-    }
-    return this;
-  };
-
-  App.prototype.nearSelectionEdge = function(x) {
-    if (this.currentSignal.window.to !== this.currentSignal.window.from) {
-      if (Math.abs(this.toX() - x) < this.hoverMargin || Math.abs(this.fromX() - x) < this.hoverMargin) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  App.prototype.bindInput = function(input) {
-    this.input = input;
-    this.input.addEventListener('keyup', (function(_this) {
-      return function(event) {
-        var e;
-        if (_this.input.value() !== '' && _this.input.value() !== null) {
-          if ((_this.currentSignal == null) || _this.currentSignal.fn !== _this.input.value()) {
-            try {
-              return _this.add(new Signal(_this.input.value(), _this.samplerate));
-            } catch (_error) {
-              e = _error;
-            }
-          }
-        }
-      };
-    })(this));
-    return this;
-  };
-
-  App.prototype.clear = function() {
-    this.canvas.height = this.canvas.height;
-    return this;
-  };
-
-  return App;
-
-})();
-
-module.exports = App;
-
-
-},{"./Signal.coffee":4}],2:[function(require,module,exports){
-"use strict";
-var Input;
-
-Input = (function() {
-  function Input(input) {
-    this.input = input;
-    this;
   }
+});
 
-  Input.prototype.value = function() {
-    return this.input.value;
-  };
-
-  Input.prototype.addEventListener = window.addEventListener.bind(Input.input);
-
-  return Input;
-
-})();
-
-module.exports = Input;
+module.exports = GraphView;
 
 
-},{}],3:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 var Sidebar;
 
 Sidebar = (function() {
-  function Sidebar(sidebar, width, hidden) {
-    this.sidebar = sidebar;
-    this.width = width;
+  function Sidebar(view, hidden) {
+    this.view = view;
     this.hidden = hidden != null ? hidden : true;
     this.signals = [];
-    this.sidebar.style.width = this.width + "px";
-    this.signalList = document.createElement('ul');
-    this.sidebar.appendChild(this.signalList).className = "sidebar-signal-list";
-    this.hiddenWidth = 55;
-    if (this.hidden) {
-      this.hide();
-    } else {
-      this.show();
-    }
+    this.view.update(this);
   }
 
-  Sidebar.prototype.bindButton = function(button) {
-    this.button = button;
-    this.button.innerHTML = this.hidden ? ">>" : "<<";
-    return this.button.addEventListener('click', ((function(_this) {
-      return function(event) {
-        return _this.toggle();
-      };
-    })(this)));
+  Sidebar.prototype.add = function(signal) {
+    this.signals.push(signal);
+    return this.view.add(signal);
   };
 
-  Sidebar.prototype.toggle = function() {
-    this.hidden = !this.hidden;
-    this.button.innerHTML = this.hidden ? ">>" : "<<";
-    if (this.hidden) {
+  return Sidebar;
+
+})();
+
+module.exports = Sidebar;
+
+
+},{}],6:[function(require,module,exports){
+'use strict';
+var SidebarView;
+
+SidebarView = (function() {
+  function SidebarView(el, app) {
+    this.el = el;
+    this.app = app;
+    this.width = 250;
+    this.hiddenWidth = 55;
+    this.button = document.createElement('button');
+    this.button.addEventListener('click', (function(_this) {
+      return function() {
+        return _this.toggle();
+      };
+    })(this));
+    this.el.appendChild(this.button).id = 'sidebar-toggle';
+    this.signalList = document.createElement('ul');
+    this.el.appendChild(this.signalList).className = 'sidebar-signal-list';
+  }
+
+  SidebarView.prototype.update = function(model) {
+    this.el.style.width = model.width + "px";
+    if (model.hidden) {
       return this.hide();
     } else {
       return this.show();
     }
   };
 
-  Sidebar.prototype.show = function() {
-    this.sidebar.style.left = 0 + "px";
-    return this;
+  SidebarView.prototype.add = function(signal) {
+    return this.signalList.insertBefore(this.makeEntry(signal), this.signalList.firstChild);
   };
 
-  Sidebar.prototype.hide = function() {
-    this.sidebar.style.left = (this.hiddenWidth - this.width) + "px";
-    return this;
+  SidebarView.prototype.show = function() {
+    this.button.innerHTML = '<<';
+    return this.el.style.left = "0px";
   };
 
-  Sidebar.prototype.add = function(signal) {
-    this.signalList.insertBefore(this.makeEntry(signal), this.signalList.firstChild);
-    this.signals.push(signal);
-    return this;
+  SidebarView.prototype.hide = function() {
+    this.button.innerHTML = '>>';
+    return this.el.style.left = (this.hiddenWidth - this.width) + "px";
   };
 
-  Sidebar.prototype.makeEntry = function(signal) {
+  SidebarView.prototype.toggle = function() {
+    this.app.sidebar.hidden = !this.app.sidebar.hidden;
+    if (this.app.sidebar.hidden) {
+      return this.hide();
+    } else {
+      return this.show();
+    }
+  };
+
+  SidebarView.prototype.makeEntry = function(signal) {
     var entry, title, toggles, txt;
     entry = document.createElement('li');
     title = document.createTextNode(signal.fn);
@@ -441,35 +483,32 @@ Sidebar = (function() {
     return entry;
   };
 
-  return Sidebar;
+  return SidebarView;
 
 })();
 
-module.exports = Sidebar;
+module.exports = SidebarView;
 
 
-},{}],4:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
-var Signal, math;
+var Signal, math,
+  __hasProp = {}.hasOwnProperty;
 
 math = require('mathjs')();
 
 Signal = (function() {
-  function Signal(fn, samplerate) {
+  function Signal(fn, view) {
     this.fn = fn;
-    this.samplerate = samplerate;
-    this.playing = false;
+    this.view = view;
     this.window = {
       from: 0,
-      to: 0,
-      focused: false
+      to: 0
     };
-    this.samples = [];
-    this;
   }
 
-  Signal.prototype.sample = function() {
-    var delta, end, expr, i, nSamples, scope, start, _fn, _i, _ref;
+  Signal.prototype.sample = function(samplerate) {
+    var delta, end, expr, i, nSamples, samples, scope, start, _fn, _i, _ref;
     if (this.window.from < this.window.to) {
       start = this.window.from;
       end = this.window.to;
@@ -477,9 +516,9 @@ Signal = (function() {
       start = this.window.to;
       end = this.window.from;
     }
-    nSamples = Math.floor((end - start) * this.samplerate);
-    this.samples = new Float32Array(nSamples);
-    delta = 1 / this.samplerate;
+    nSamples = Math.floor((end - start) * samplerate);
+    samples = new Float32Array(nSamples);
+    delta = 1 / samplerate;
     expr = math.parse(this.fn).compile(math);
     scope = {
       x: start
@@ -487,70 +526,44 @@ Signal = (function() {
     _fn = (function(_this) {
       return function() {
         scope.x += delta;
-        return _this.samples[i] = expr["eval"](scope);
+        return samples[i] = expr["eval"](scope);
       };
     })(this);
     for (i = _i = 0, _ref = nSamples - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
       _fn();
     }
-    return this;
+    return samples;
   };
 
-  Signal.prototype.createBufferSource = function(ctx) {
-    var buffer, data, i, _fn, _i, _ref;
-    buffer = ctx.createBuffer(1, this.samples.length, this.samplerate);
-    data = buffer.getChannelData(0);
+  Signal.prototype.update = function(obj) {
+    var key, updateView, val, _fn;
+    updateView = false;
     _fn = (function(_this) {
       return function() {
-        return data[i] = _this.samples[i];
+        if ((val != null) && _this[key] !== val) {
+          _this[key] = val;
+          return updateView = true;
+        }
       };
     })(this);
-    for (i = _i = 0, _ref = this.samples.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+    for (key in obj) {
+      if (!__hasProp.call(obj, key)) continue;
+      val = obj[key];
       _fn();
     }
-    this.source = ctx.createBufferSource();
-    this.source.loop = true;
-    this.source.buffer = buffer;
-    return this;
-  };
-
-  Signal.prototype.connect = function(gain) {
-    this.source.connect(gain);
-    return this;
-  };
-
-  Signal.prototype.play = function(ctx, gain) {
-    if (this.playing) {
-      this.stop();
+    if (updateView) {
+      return this.view.update(this);
     }
-    if (this.window.from !== this.window.to) {
-      this.playing = true;
-      this.sample();
-      this.createBufferSource(ctx);
-      this.connect(gain);
-      this.source.noteOn(0);
-    }
-    return this;
   };
 
-  Signal.prototype.stop = function() {
-    if (this.playing) {
-      this.source.noteOff(0);
-    }
-    this.playing = false;
-    return this;
-  };
-
-  Signal.prototype.startWindowSelection = function(s) {
-    this.window.from = s;
-    this.window.to = s;
-    this.window.focused = true;
-    return this;
-  };
-
-  Signal.prototype.endWindowSelection = function(s) {
-    this.window.to = s;
-    return this;
+  Signal.prototype.state = function() {
+    return {
+      fn: this.fn,
+      window: {
+        from: this.window.from,
+        to: this.window.to
+      }
+    };
   };
 
   return Signal;
@@ -560,29 +573,19 @@ Signal = (function() {
 module.exports = Signal;
 
 
-},{}],5:[function(require,module,exports){
-"use strict";
-var $, App, Input, Sidebar, app, samplerate;
+},{}],8:[function(require,module,exports){
+'use strict';
+var $, App, app, samplerate;
 
-App = require('./App.coffee');
-
-Input = require('./Input.coffee');
-
-Sidebar = require('./Sidebar.coffee');
+App = require('./AppController.coffee');
 
 $ = document.querySelector.bind(document);
 
 samplerate = 48000;
 
-app = new App($('#graph'), samplerate);
-
-app.sidebar = new Sidebar($('#sidebar'), 250);
-
-app.sidebar.bindButton($('#sidebar-toggle'));
-
-app.bindInput(new Input($('#fn-input')));
+app = new App($('#graph'), $('#sidebar'), $('#fn-input'), samplerate);
 
 app.setSignalColors(["#b58900", "#dc322f", "#d33682", "#6c71c4", "#268bd2", "#2aa198", "#cb4b16", "#859900"]).setLineWidth(3);
 
 
-},{"./App.coffee":1,"./Input.coffee":2,"./Sidebar.coffee":3}]},{},[5])
+},{"./AppController.coffee":1}]},{},[8])
