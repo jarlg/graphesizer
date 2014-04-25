@@ -110,6 +110,11 @@ App = (function() {
             to: false
           });
         }
+      } else {
+        return this.graph.updateActive({
+          from: false,
+          to: false
+        });
       }
     }
   };
@@ -147,12 +152,28 @@ App = (function() {
   App.prototype.beginDrag = function(event) {
     if (this.signal != null) {
       this.graph.dragging = true;
-      return this.signal.update({
-        window: {
-          from: this.graph.xToSeconds(event.x),
-          to: this.graph.xToSeconds(event.x)
-        }
-      });
+      if (this.graph.activeSelectionEdges.to) {
+        return this.signal.update({
+          window: {
+            from: this.signal.window.from,
+            to: this.graph.xToSeconds(event.x)
+          }
+        });
+      } else if (this.graph.activeSelectionEdges.from) {
+        return this.signal.update({
+          window: {
+            from: this.signal.window.to,
+            to: this.graph.xToSeconds(event.x)
+          }
+        });
+      } else {
+        return this.signal.update({
+          window: {
+            from: this.graph.xToSeconds(event.x),
+            to: this.graph.xToSeconds(event.x)
+          }
+        });
+      }
     }
   };
 

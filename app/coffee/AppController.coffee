@@ -58,6 +58,8 @@ class App
                         @graph.updateActive to: false, from: true
                 else
                     @graph.updateActive from: false, to: false
+            else
+                @graph.updateActive from: false, to: false
 
     updateCurrentSignal: ->
         if @validate @input.value
@@ -81,10 +83,21 @@ class App
     beginDrag: (event) ->
         if @signal?
             @graph.dragging = true
-            @signal.update
-                    window: 
-                        from: @graph.xToSeconds(event.x),
-                        to  : @graph.xToSeconds(event.x)
+            if @graph.activeSelectionEdges.to
+                @signal.update
+                        window: 
+                            from: @signal.window.from
+                            to  : @graph.xToSeconds(event.x)
+            else if @graph.activeSelectionEdges.from
+                @signal.update
+                        window: 
+                            from: @signal.window.to
+                            to  : @graph.xToSeconds(event.x)
+            else
+                @signal.update
+                        window: 
+                            from: @graph.xToSeconds(event.x),
+                            to  : @graph.xToSeconds(event.x)
 
     endDrag: (event) ->
         if @signal?
