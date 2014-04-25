@@ -19,7 +19,7 @@ class Audio
             for i in [0 .. samples.length-1]
                 do (data, i, samples) -> 
                     data[i] = samples[i]
-            @source = ctx.createBufferSource()
+            @source = @ctx.createBufferSource()
             @source.loop = true
             @source.buffer = buffer
         else

@@ -3,14 +3,8 @@
 math = require('mathjs')()
 
 # MODEL
-# intended public methods:
-#   play()
-#   stop()
-#   connect()
-#   startWindowSelection()
-#   endWindowSelection()
 class Signal
-    constructor: (@fn, @audioView) ->
+    constructor: (@fn, @audioView, @graphView) ->
         @window = from : 0, to : 0 # units in seconds
 
     # private; use play()!
@@ -41,6 +35,7 @@ class Signal
                     updateView = true
         if updateView
             @audioView.update @
+            @graphView.update @
 
     state: ->
         fn: @fn,
