@@ -23,9 +23,10 @@ class App
         @audio = new Audio new webkitAudioContext(), @
 
         @input.addEventListener 'keyup', () => @updateCurrentSignal()
-        @graph.addEventListener 'mousemove', (event) => @update event
-        @graph.addEventListener 'mousedown', (event) => @beginDrag event
-        @graph.addEventListener 'mouseup', (event) => @endDrag event
+        @graph.canvas.addEventListener 'mousedown', (event) => @beginDrag event
+        @graph.canvas.addEventListener 'mouseup', (event) => @endDrag event
+        @graph.canvas.addEventListener 'mousemove', (event) => @update event
+        @graph.canvas.addEventListener 'mousewheel', (event) => @zoom event
 
 
     setLineWidth: (lineWidth) -> @graph.ctx.lineWidth = lineWidth; @
@@ -41,12 +42,22 @@ class App
 
     update: (event) ->
         if @signal?
+            toX = @graph.secondsToX @signal.window.to
+            fromX = @graph.secondsToX @signal.window.from
             if @graph.dragging
                 @signal.update 
                             window: 
-                                from: @signal.window.from
+                                from: @signal.window.from,
                                 to: @graph.xToSeconds event.x
-        # also handle selectionEdgeHover
+            else if toX != fromX
+                if @graph.hovering toX, event.x
+                    if Math.abs(toX - event.x) < Math.abs(fromX - event.x)
+                        @graph.updateActive to: true, from: false
+                else if @graph.hovering fromX, event.x
+                    if Math.abs(fromX - event.x) < Math.abs(toX - event.x)
+                        @graph.updateActive to: false, from: true
+                else
+                    @graph.updateActive from: false, to: false
 
     updateCurrentSignal: ->
         if @validate @input.value
@@ -71,12 +82,9 @@ class App
         if @signal?
             @graph.dragging = true
             @signal.update
-                        window:
-                            from: @graph.xToSeconds event.x
-                            to: @graph.xToSeconds event.x
-            hover = @graph.hovering(@signal, event.x)
-            if hover? and hover == @signal.window.from
-                [@signal.window.from, @signal.window.to] = [@signal.window.to, @signal.window.from]
+                    window: 
+                        from: @graph.xToSeconds(event.x),
+                        to  : @graph.xToSeconds(event.x)
 
     endDrag: (event) ->
         if @signal?
@@ -86,6 +94,18 @@ class App
                             to: @graph.xToSeconds event.x
                             from: @signal.window.from
             @audio.play()
+
+    zoom: (event) ->
+        if @signal?
+            if @graph.zoom > 10
+                @graph.zoom += event.deltaY
+            else if @graph.zoom > 1
+                @graph.zoom += event.deltaY / 10  
+            else if @graph.zoom >= 0
+                @graph.zoom += event.deltaY / 100
+
+            @graph.zoom = 0 if @graph.zoom < 0
+            @graph.draw @signal
 
 
 module.exports = App

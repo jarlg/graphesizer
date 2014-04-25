@@ -6,6 +6,7 @@ math = require('mathjs')()
 class Signal
     constructor: (@fn, @audioView, @graphView) ->
         @window = from : 0, to : 0 # units in seconds
+        @updateViews()
 
     # private; use play()!
     sample: (samplerate) ->
@@ -29,19 +30,19 @@ class Signal
     update: (obj) ->
         updateView = false
         for own key, val of obj
-            do () =>
+            do =>
                 if val? and @[key] != val
                     @[key] = val
                     updateView = true
-        if updateView
-            @audioView.update @
-            @graphView.update @
+        @updateViews() if updateView
 
     state: ->
         fn: @fn,
         window:
             from: @window.from,
             to: @window.to
+
+    updateViews: -> @graphView.update @; @audioView.update @ 
 
 
 module.exports = Signal

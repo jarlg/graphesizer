@@ -9,8 +9,8 @@ class Audio
         @gain.gain.value = 0.5
         @gain.connect @ctx.destination
 
-    update: (model) ->
-        @createBufferSource model.sample(@app.samplerate)
+    update: (signal) ->
+        @createBufferSource signal.sample(@app.samplerate)
 
     createBufferSource: (samples) ->
         if samples.length > 0

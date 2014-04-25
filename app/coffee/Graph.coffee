@@ -13,6 +13,7 @@ class Graph
         @origoY = window.innerHeight / 2
 
         @dragging  = false
+        @activeSelectionEdges = to: false, from: false
 
         @zoom  = 1 # s onscreen
         @zoomY = 180 # height in px corresponding to amp 1 in signal
@@ -29,67 +30,59 @@ class Graph
     xToSeconds: (x) ->
         (x - @origoX) * @zoom / @canvas.width
 
-    _dist: (x1, x2) -> Math.abs(x1 - x2)
-
-    hovering: (signal, x) ->
-        if @_dist(signal.window.to, x) < @_dist(signal.window.from, x)
-            if @_dist(signal.window.to, x) < @options.hoverMargin
-                return signal.window.to
-        else if signal.window.to != signal.window.from
-            if @_dist(signal.window.from, x) < @options.hoverMargin
-                return signal.window.from
-        null
+    hovering: (edgeX, x) -> Math.abs(edgeX - x) < @options.hoverMargin
 
     clear: -> @canvas.width = @canvas.width
-    addEventListener: window.addEventListener.bind(@canvas)
+
+    updateActive: (obj) ->
+        redraw = false
+        for own key, val of obj
+            do =>
+                if @activeSelectionEdges[key] != val
+                    @activeSelectionEdges[key] = val
+                    redraw = true
+        if redraw
+            @draw @app.signal
 
     update: (signal) -> 
+        if @dragging
+            @updateActive to: true, from: false
         @draw signal
 
     draw: (signal) -> 
         @clear()
         toX   = @secondsToX signal.window.to
         fromX = @secondsToX signal.window.from
-        @drawSignal signal, @zoom, @zoomY,
-                    @origoX, @origoY
+        @drawSignal signal
         @drawTotalSecondsOnScreen @xToSeconds(window.innerWidth + @origoX)
-        @drawOrigoIndicator @origoX
-        @drawSelection toX,
-                       fromX,
-                       @dragging,
-                       @options
-        @drawSelectionText not @app.sidebar.hidden,
-                           signal.window.from,
-                           signal.window.to,
-                           fromX,
-                           toX
+        @drawOrigoIndicator()
+        @drawSelection toX, fromX
+
+        if @dragging or fromX != toX
+            @drawSelectionText not @app.sidebar.hidden,
+                               signal.window.from,
+                               signal.window.to,
+                               fromX,
+                               toX
         if @dragging
-            @drawSelectionEdge fromX,
-                               false,
-                               @options
-            @drawSelectionEdge toX,
-                               true,
-                               @options
-        else
-            @drawSelectionEdge fromX,
-                               @hovering(signal, fromX),
-                               @options
-            @drawSelectionEdge toX,
-                               @hovering(signal, toX),
-                               @options
+            @drawSelectionEdge fromX, false
+            @drawSelectionEdge toX, true
+        else if fromX != toX
+            @drawSelectionEdge fromX, @activeSelectionEdges.from
+            @drawSelectionEdge toX, @activeSelectionEdges.to
         @
 
-    drawSignal: (signal, zoom, zoomY, origoX, origoY) ->
+    drawSignal: (signal) ->
         expr = math.parse(signal.fn).compile(math)
-        delta = zoom / @canvas.width
-        scope =  x: origoX
+        delta = @zoom / @canvas.width
+        scope =  x: @xToSeconds 0
         @ctx.moveTo 0, expr.eval scope
         @ctx.beginPath()
         @ctx.strokeStyle = @app.nextColor()
-        for i in [1 .. @ctx.canvas.width-1]
+        for i in [1 .. @canvas.width-1]
             do => 
                 scope.x += delta
-                @ctx.lineTo i, zoomY * expr.eval(scope) + origoY
+                @ctx.lineTo i, @zoomY * expr.eval(scope) + @origoY
         @ctx.stroke()
         @ctx.closePath()
         @
@@ -102,36 +95,35 @@ class Graph
                       window.innerHeight - 20
         @
         
-    drawOrigoIndicator: (origoX) ->
+    drawOrigoIndicator: ->
         @ctx.beginPath()
         @ctx.strokeStyle = "#93a1a1"
-        @ctx.moveTo origoX, 0
-        @ctx.lineTo origoX, 25
+        @ctx.moveTo @origoX, 0
+        @ctx.lineTo @origoX, 25
         @ctx.stroke()
         @ctx.closePath()
         @
 
 
-    drawSelection: (toX, fromX, dragging, options) ->
-        if toX != fromX or dragging
-            @ctx.fillStyle = options.selectionFillColor
+    drawSelection: (toX, fromX) ->
+        if toX != fromX or @dragging
+            @ctx.fillStyle = @options.selectionFillColor
             @ctx.fillRect fromX,
                           0,
                           toX - fromX,
                           window.innerHeight
         @
 
-    drawSelectionEdge: (x, hover, options) ->
-        if hover?
-            @ctx.beginPath()
-            if hover
-                @ctx.strokeStyle = options.selectionEdgeFocusColor
-            else
-                @ctx.strokeStyle = options.selectionEdgeColor
-            @ctx.moveTo x, 0
-            @ctx.lineTo x, window.innerHeight
-            @ctx.stroke()
-            @ctx.closePath()
+    drawSelectionEdge: (x, active=false) ->
+        @ctx.beginPath()
+        if active 
+            @ctx.strokeStyle = @options.selectionEdgeFocusColor
+        else
+            @ctx.strokeStyle = @options.selectionEdgeColor
+        @ctx.moveTo x, 0
+        @ctx.lineTo x, window.innerHeight
+        @ctx.stroke()
+        @ctx.closePath()
         @
 
     drawSelectionText: (sidebarShowing, from, to, fromX, toX) ->
