@@ -24,14 +24,9 @@ class Graph
         selectionEdgeFocusColor: "#586e75",
         selectionFillColor: "rgba(238, 232, 213, 0.5)"
 
-    secondsToX: (s) ->
-        ((s * @canvas.width) / @zoom) + @origoX
-
-    xToSeconds: (x) ->
-        (x - @origoX) * @zoom / @canvas.width
-
+    secondsToX: (s) -> (s * @canvas.width / @zoom) + @origoX
+    xToSeconds: (x) -> (x - @origoX) * @zoom / @canvas.width
     hovering: (edgeX, x) -> Math.abs(edgeX - x) < @options.hoverMargin
-
     clear: -> @canvas.width = @canvas.width
 
     updateActive: (obj) ->
@@ -57,7 +52,6 @@ class Graph
         @drawTotalSecondsOnScreen @xToSeconds(window.innerWidth + @origoX)
         @drawOrigoIndicator()
         @drawSelection toX, fromX
-
         if @dragging or fromX != toX
             @drawSelectionText not @app.sidebar.hidden,
                                signal.window.from,
@@ -103,7 +97,6 @@ class Graph
         @ctx.stroke()
         @ctx.closePath()
         @
-
 
     drawSelection: (toX, fromX) ->
         if toX != fromX or @dragging
