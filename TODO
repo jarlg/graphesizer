@@ -3,6 +3,8 @@ BUGS
 FUNCTIONALITY
     * provide clickable list of functions; compose using mouse
     * draggable integers in function input; listen realtime changes
+    * export sound
+    -> check out "log(sin(x^sin(x)))* (sqrt(x))*72*((1/6^2)*sin(880 * 2 * pi * x)+(1/6^5)*sin(220 * 2 * pi * x)+(1/6^4)*sin(440 * 2 * pi * x)+(1/6^3)*sin(110 * 2 * pi * x)+(1/6^2)*sin(55 * 2 * pi * x)+(1/6)*sin(27.5 * 2 * pi * x))^(3/2)"
 
 LAYOUT
 
