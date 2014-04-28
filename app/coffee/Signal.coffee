@@ -7,8 +7,9 @@ class Signal
     constructor: (@fn, @audioView, @graphView) ->
         @window = from : 0, to : 0 # units in seconds
         @updateViews()
-
-    # private; use play()!
+    
+    updateViews: -> @graphView.update @; @audioView.update @
+    
     sample: (samplerate) ->
         if @window.from < @window.to
             start = @window.from
@@ -38,13 +39,10 @@ class Signal
             @updateViews()
             @audioView.play()
 
-    state: ->
-        fn: @fn,
-        window:
-            from: @window.from,
-            to: @window.to
-
-    updateViews: -> @graphView.update @; @audioView.update @
+    state: -> fn : @fn,
+              window : 
+                  from : @window.from,
+                  to   : @window.to
 
 
 module.exports = Signal

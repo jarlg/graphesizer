@@ -3,11 +3,10 @@
 math = require('mathjs')()
 
 Signal = require './Signal.coffee'
-Audio = require './Audio.coffee'
+Audio  = require './Audio.coffee'
+Graph  = require './Graph.coffee'
 
-Graph = require './Graph.coffee'
-
-Sidebar = require './Sidebar.coffee'
+Sidebar     = require './Sidebar.coffee'
 SidebarView = require './SidebarView.coffee'
 
 class App
@@ -16,12 +15,11 @@ class App
         @signalColors = []
 
         @graph = new Graph canvas, @
-
+        @audio = new Audio new webkitAudioContext(), @
+        
         @sidebarView = new SidebarView sidebar, @
         @sidebar = new Sidebar @sidebarView
-
-        @audio = new Audio new webkitAudioContext(), @
-
+        
         @input.addEventListener 'keyup', () => @updateCurrentSignal()
         @graph.canvas.addEventListener 'mousedown', (event) => @beginDrag event
         @graph.canvas.addEventListener 'mouseup', (event) => @endDrag event
@@ -66,8 +64,7 @@ class App
             if @signal?
                 oldSignalState = @signal.state()
                 try
-                    @signal.update
-                                fn: @input.value
+                    @signal.update fn: @input.value
                 catch e
                     console.log e if @debug
                     @signal.update oldSignalState
@@ -80,6 +77,7 @@ class App
     # dragging is changing @signal.window.to on mousemove
     # dragging = true flag makes this happen
     # if hovering a previous selection edge, continue dragging
+    # with previous @signal.window.from (or swap if dragging from)
     beginDrag: (event) ->
         if @signal?
             @graph.dragging = true
