@@ -22,9 +22,9 @@ App = (function() {
     this.signal = null;
     this.signalColors = [];
     this.graph = new Graph(canvas, this);
+    this.audio = new Audio(new webkitAudioContext(), this);
     this.sidebarView = new SidebarView(sidebar, this);
     this.sidebar = new Sidebar(this.sidebarView);
-    this.audio = new Audio(new webkitAudioContext(), this);
     this.input.addEventListener('keyup', (function(_this) {
       return function() {
         return _this.updateCurrentSignal();
@@ -48,6 +48,11 @@ App = (function() {
     this.graph.canvas.addEventListener('mousewheel', (function(_this) {
       return function(event) {
         return _this.zoom(event);
+      };
+    })(this));
+    this.graph.canvas.addEventListener('keydown', (function(_this) {
+      return function(event) {
+        return _this.handleShortcuts(event);
       };
     })(this));
   }
@@ -125,19 +130,28 @@ App = (function() {
       if (this.signal != null) {
         oldSignalState = this.signal.state();
         try {
-          return this.signal.update({
+          this.signal.update({
             fn: this.input.value
           });
+          if (!this.audio.options.realtimeAudio) {
+            return this.audio.play();
+          }
         } catch (_error) {
           e = _error;
           if (this.debug) {
             console.log(e);
           }
-          return this.signal.update(oldSignalState);
+          this.signal.update(oldSignalState);
+          if (!this.audio.options.realtimeAudio) {
+            return this.audio.play();
+          }
         }
       } else {
         try {
-          return this.signal = new Signal(this.input.value, this.audio, this.graph);
+          this.signal = new Signal(this.input.value, this.audio, this.graph);
+          if (!this.audio.options.realtimeAudio) {
+            return this.audio.play();
+          }
         } catch (_error) {
           e = _error;
           if (this.debug) {
@@ -180,12 +194,15 @@ App = (function() {
   App.prototype.endDrag = function(event) {
     if (this.signal != null) {
       this.graph.dragging = false;
-      return this.signal.update({
+      this.signal.update({
         window: {
           to: this.graph.xToSeconds(event.x),
           from: this.signal.window.from
         }
       });
+      if (!this.audio.options.realtimeAudio) {
+        return this.audio.play();
+      }
     }
   };
 
@@ -202,6 +219,12 @@ App = (function() {
         this.graph.zoom = 0;
       }
       return this.graph.draw(this.signal);
+    }
+  };
+
+  App.prototype.handleShortcuts = function(event) {
+    if (String.fromCharCode(event.keyCode) === 'R') {
+      return this.audio.options.realtimeUpdate = !this.audio.options.realtimeUpdate;
     }
   };
 
@@ -227,9 +250,16 @@ Audio = (function() {
     this.gain.connect(this.ctx.destination);
   }
 
+  Audio.prototype.options = {
+    realtimeUpdate: false
+  };
+
   Audio.prototype.update = function(signal) {
     this.stop();
-    return this.createBufferSource(signal.sample(this.app.samplerate));
+    this.createBufferSource(signal.sample(this.app.samplerate));
+    if (this.options.realtimeUpdate) {
+      return this.play();
+    }
   };
 
   Audio.prototype.createBufferSource = function(samples) {
@@ -306,7 +336,7 @@ Graph = (function() {
   };
 
   Graph.prototype.secondsToX = function(s) {
-    return ((s * this.canvas.width) / this.zoom) + this.origoX;
+    return (s * this.canvas.width / this.zoom) + this.origoX;
   };
 
   Graph.prototype.xToSeconds = function(x) {
@@ -596,6 +626,11 @@ Signal = (function() {
     this.updateViews();
   }
 
+  Signal.prototype.updateViews = function() {
+    this.graphView.update(this);
+    return this.audioView.update(this);
+  };
+
   Signal.prototype.sample = function(samplerate) {
     var delta, end, expr, i, nSamples, samples, scope, start, _fn, _i, _ref;
     if (this.window.from < this.window.to) {
@@ -641,8 +676,7 @@ Signal = (function() {
       _fn();
     }
     if (updateView) {
-      this.updateViews();
-      return this.audioView.play();
+      return this.updateViews();
     }
   };
 
@@ -654,11 +688,6 @@ Signal = (function() {
         to: this.window.to
       }
     };
-  };
-
-  Signal.prototype.updateViews = function() {
-    this.graphView.update(this);
-    return this.audioView.update(this);
   };
 
   return Signal;

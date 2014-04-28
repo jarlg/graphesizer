@@ -124,7 +124,7 @@ class App
             @graph.draw @signal
 
     handleShortcuts: (event) ->
-        if String.fromCharCode(event.keyCode) == 'r'
+        if String.fromCharCode(event.keyCode) == 'R'
             @audio.options.realtimeUpdate = not @audio.options.realtimeUpdate
 
 
