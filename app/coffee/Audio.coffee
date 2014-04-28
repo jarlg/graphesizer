@@ -9,9 +9,13 @@ class Audio
         @gain.gain.value = 0.5
         @gain.connect @ctx.destination
 
+    options:
+        realtimeUpdate: false
+
     update: (signal) ->
         @stop()
         @createBufferSource signal.sample(@app.samplerate)
+        @play() if @options.realtimeUpdate
 
     createBufferSource: (samples) ->
         if samples.length > 0

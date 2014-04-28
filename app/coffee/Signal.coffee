@@ -35,14 +35,13 @@ class Signal
                 if val? and @[key] != val
                     @[key] = val
                     updateView = true
-        if updateView
-            @updateViews()
-            @audioView.play()
+        @updateViews() if updateView
 
-    state: -> fn : @fn,
-              window : 
-                  from : @window.from,
-                  to   : @window.to
+    state: ->
+        fn : @fn,
+        window : 
+            from : @window.from,
+            to   : @window.to
 
 
 module.exports = Signal

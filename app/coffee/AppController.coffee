@@ -25,6 +25,7 @@ class App
         @graph.canvas.addEventListener 'mouseup', (event) => @endDrag event
         @graph.canvas.addEventListener 'mousemove', (event) => @update event
         @graph.canvas.addEventListener 'mousewheel', (event) => @zoom event
+        @graph.canvas.addEventListener 'keydown', (event) => @handleShortcuts event
 
 
     setLineWidth: (lineWidth) -> @graph.ctx.lineWidth = lineWidth; @
@@ -65,11 +66,15 @@ class App
                 oldSignalState = @signal.state()
                 try
                     @signal.update fn: @input.value
+                    @audio.play() if not @audio.options.realtimeAudio
                 catch e
                     console.log e if @debug
                     @signal.update oldSignalState
+                    @audio.play() if not @audio.options.realtimeAudio
             else
-                try @signal = new Signal @input.value, @audio, @graph
+                try 
+                    @signal = new Signal @input.value, @audio, @graph
+                    @audio.play() if not @audio.options.realtimeAudio
                 catch e
                     console.log e if @debug
                     @signal = null
@@ -104,6 +109,7 @@ class App
                         window: 
                             to: @graph.xToSeconds event.x
                             from: @signal.window.from
+            @audio.play() if not @audio.options.realtimeAudio
 
     zoom: (event) ->
         if @signal?
@@ -116,6 +122,10 @@ class App
 
             @graph.zoom = 0 if @graph.zoom < 0
             @graph.draw @signal
+
+    handleShortcuts: (event) ->
+        if String.fromCharCode(event.keyCode) == 'r'
+            @audio.options.realtimeUpdate = not @audio.options.realtimeUpdate
 
 
 module.exports = App
