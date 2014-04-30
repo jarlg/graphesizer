@@ -11,7 +11,7 @@ class Audio
 
     update: (signal) ->
         @stop()
-        @createBufferSource signal.sample(@app.samplerate)
+        @createBufferSource signal.getData()
         @play()
 
     createBufferSource: (samples) ->

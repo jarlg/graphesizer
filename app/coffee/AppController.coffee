@@ -15,7 +15,6 @@ class App
         @signalColors = []
 
         @graph = new Graph canvas, @
-        @audio = new Audio new webkitAudioContext(), @
         
         @sidebarView = new SidebarView sidebar, @
         @sidebar = new Sidebar @sidebarView
@@ -25,6 +24,7 @@ class App
         @graph.canvas.addEventListener 'mouseup', (event) => @endDrag event
         @graph.canvas.addEventListener 'mousemove', (event) => @update event
         @graph.canvas.addEventListener 'mousewheel', (event) => @zoom event
+        @graph.canvas.addEventListener 'keydown', (event) => @handleKeys event
 
 
     setLineWidth: (lineWidth) -> @graph.ctx.lineWidth = lineWidth; @
@@ -65,15 +65,14 @@ class App
                 oldSignalState = @signal.state()
                 try
                     @signal.update fn: @input.value
-                    @audio.update @signal
                 catch e
                     console.log e if @debug
                     @signal.update oldSignalState
-                    @audio.update @signal
             else
                 try 
-                    @signal = new Signal @input.value, @audio, @graph
-                    @audio.update @signal
+                    @signal = new Signal @input.value, null, @graph, @samplerate
+                    @signal.audio = new Audio new webkitAudioContext(), @
+                    @signal.play()
                 catch e
                     console.log e if @debug
                     @signal = null
@@ -108,7 +107,7 @@ class App
                         window: 
                             to: @graph.xToSeconds event.x
                             from: @signal.window.from
-            @audio.update @signal
+            @signal.play()
 
     zoom: (event) ->
         if @signal?
@@ -121,6 +120,14 @@ class App
 
             @graph.zoom = 0 if @graph.zoom < 0
             @graph.draw @signal
+
+    handleKeys: (event) ->
+        if event.keyCode == 13 # enter
+            @sidebar.add @signal
+            @signal.audio.stop()
+            @signal = new Signal @input.value, null, @graph, @samplerate
+            @signal.audio = new Audio new webkitAudioContext(), @
+            @signal.play()
 
 
 module.exports = App

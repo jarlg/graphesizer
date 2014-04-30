@@ -4,22 +4,32 @@ math = require('mathjs')()
 
 # MODEL
 class Signal
-    constructor: (@fn, @audioView, @graphView) ->
+    constructor: (@fn, @audio, @graph, @samplerate) ->
         @window = from : 0, to : 0 # units in seconds
-        @updateViews()
+        @dirty = false
+        @data = []
+        @draw @
+        @play @
+
+    draw: -> @graph.update @ if @graph?
+    play: -> @audio.update @ if @audio?
+
+    getData: ->
+        if @dirty
+            @data = @_sample()
+            @dirty = false
+        @data
     
-    updateViews: -> @graphView.update @ #; @audioView.update @
-    
-    sample: (samplerate) ->
+    _sample: ->
         if @window.from < @window.to
             start = @window.from
             end = @window.to
         else 
             start = @window.to
             end = @window.from
-        nSamples = Math.floor((end - start) * samplerate)
+        nSamples = Math.floor((end - start) * @samplerate)
         samples = new Float32Array nSamples
-        delta = 1 / samplerate
+        delta = 1 / @samplerate
         expr = math.parse(@fn).compile(math)
         scope =  x: start 
         for i in [0 .. nSamples-1]
@@ -29,13 +39,13 @@ class Signal
         samples
 
     update: (obj) ->
-        updateView = false
+        @dirty = false if not @dirty
         for own key, val of obj
             do =>
                 if val? and @[key] != val
                     @[key] = val
-                    updateView = true
-        @updateViews() if updateView
+                    @dirty = true
+        @draw(@) if @dirty
 
     state: ->
         fn : @fn,

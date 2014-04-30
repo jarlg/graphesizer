@@ -43,13 +43,19 @@ class SidebarView
 
         toggles = document.createElement 'div'
         toggles.style.background = signal.color
-        txt = document.createTextNode ''
+        txt = document.createTextNode '0'
         toggles.appendChild txt
 
         entry.appendChild title
         entry.appendChild(toggles)
             .className = 'sidebar-signal-toggle'
         entry.className = 'sidebar-signal'
+        
+        entry.addEventListener 'mouseup', (event) =>
+            if not signal.audio.playing
+                signal.play()
+            else
+                signal.audio.stop()
         entry
 
 

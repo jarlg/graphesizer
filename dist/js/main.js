@@ -22,7 +22,6 @@ App = (function() {
     this.signal = null;
     this.signalColors = [];
     this.graph = new Graph(canvas, this);
-    this.audio = new Audio(new webkitAudioContext(), this);
     this.sidebarView = new SidebarView(sidebar, this);
     this.sidebar = new Sidebar(this.sidebarView);
     this.input.addEventListener('keyup', (function(_this) {
@@ -48,6 +47,11 @@ App = (function() {
     this.graph.canvas.addEventListener('mousewheel', (function(_this) {
       return function(event) {
         return _this.zoom(event);
+      };
+    })(this));
+    this.graph.canvas.addEventListener('keydown', (function(_this) {
+      return function(event) {
+        return _this.handleKeys(event);
       };
     })(this));
   }
@@ -125,22 +129,21 @@ App = (function() {
       if (this.signal != null) {
         oldSignalState = this.signal.state();
         try {
-          this.signal.update({
+          return this.signal.update({
             fn: this.input.value
           });
-          return this.audio.update(this.signal);
         } catch (_error) {
           e = _error;
           if (this.debug) {
             console.log(e);
           }
-          this.signal.update(oldSignalState);
-          return this.audio.update(this.signal);
+          return this.signal.update(oldSignalState);
         }
       } else {
         try {
-          this.signal = new Signal(this.input.value, this.audio, this.graph);
-          return this.audio.update(this.signal);
+          this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
+          this.signal.audio = new Audio(new webkitAudioContext(), this);
+          return this.signal.play();
         } catch (_error) {
           e = _error;
           if (this.debug) {
@@ -189,7 +192,7 @@ App = (function() {
           from: this.signal.window.from
         }
       });
-      return this.audio.update(this.signal);
+      return this.signal.play();
     }
   };
 
@@ -206,6 +209,16 @@ App = (function() {
         this.graph.zoom = 0;
       }
       return this.graph.draw(this.signal);
+    }
+  };
+
+  App.prototype.handleKeys = function(event) {
+    if (event.keyCode === 13) {
+      this.sidebar.add(this.signal);
+      this.signal.audio.stop();
+      this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
+      this.signal.audio = new Audio(new webkitAudioContext(), this);
+      return this.signal.play();
     }
   };
 
@@ -233,7 +246,7 @@ Audio = (function() {
 
   Audio.prototype.update = function(signal) {
     this.stop();
-    this.createBufferSource(signal.sample(this.app.samplerate));
+    this.createBufferSource(signal.getData());
     return this.play();
   };
 
@@ -567,11 +580,20 @@ SidebarView = (function() {
     title = document.createTextNode(signal.fn);
     toggles = document.createElement('div');
     toggles.style.background = signal.color;
-    txt = document.createTextNode('');
+    txt = document.createTextNode('0');
     toggles.appendChild(txt);
     entry.appendChild(title);
     entry.appendChild(toggles).className = 'sidebar-signal-toggle';
     entry.className = 'sidebar-signal';
+    entry.addEventListener('mouseup', (function(_this) {
+      return function(event) {
+        if (!signal.audio.playing) {
+          return signal.play();
+        } else {
+          return signal.audio.stop();
+        }
+      };
+    })(this));
     return entry;
   };
 
@@ -590,22 +612,42 @@ var Signal, math,
 math = require('mathjs')();
 
 Signal = (function() {
-  function Signal(fn, audioView, graphView) {
+  function Signal(fn, audio, graph, samplerate) {
     this.fn = fn;
-    this.audioView = audioView;
-    this.graphView = graphView;
+    this.audio = audio;
+    this.graph = graph;
+    this.samplerate = samplerate;
     this.window = {
       from: 0,
       to: 0
     };
-    this.updateViews();
+    this.dirty = false;
+    this.data = [];
+    this.draw(this);
+    this.play(this);
   }
 
-  Signal.prototype.updateViews = function() {
-    return this.graphView.update(this);
+  Signal.prototype.draw = function() {
+    if (this.graph != null) {
+      return this.graph.update(this);
+    }
   };
 
-  Signal.prototype.sample = function(samplerate) {
+  Signal.prototype.play = function() {
+    if (this.audio != null) {
+      return this.audio.update(this);
+    }
+  };
+
+  Signal.prototype.getData = function() {
+    if (this.dirty) {
+      this.data = this._sample();
+      this.dirty = false;
+    }
+    return this.data;
+  };
+
+  Signal.prototype._sample = function() {
     var delta, end, expr, i, nSamples, samples, scope, start, _fn, _i, _ref;
     if (this.window.from < this.window.to) {
       start = this.window.from;
@@ -614,9 +656,9 @@ Signal = (function() {
       start = this.window.to;
       end = this.window.from;
     }
-    nSamples = Math.floor((end - start) * samplerate);
+    nSamples = Math.floor((end - start) * this.samplerate);
     samples = new Float32Array(nSamples);
-    delta = 1 / samplerate;
+    delta = 1 / this.samplerate;
     expr = math.parse(this.fn).compile(math);
     scope = {
       x: start
@@ -634,13 +676,15 @@ Signal = (function() {
   };
 
   Signal.prototype.update = function(obj) {
-    var key, updateView, val, _fn;
-    updateView = false;
+    var key, val, _fn;
+    if (!this.dirty) {
+      this.dirty = false;
+    }
     _fn = (function(_this) {
       return function() {
         if ((val != null) && _this[key] !== val) {
           _this[key] = val;
-          return updateView = true;
+          return _this.dirty = true;
         }
       };
     })(this);
@@ -649,8 +693,8 @@ Signal = (function() {
       val = obj[key];
       _fn();
     }
-    if (updateView) {
-      return this.updateViews();
+    if (this.dirty) {
+      return this.draw(this);
     }
   };
 
