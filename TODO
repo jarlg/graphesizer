@@ -20,6 +20,7 @@ DESIGN
 
 IDEAS
     * mirror sample area around an x value (highest x value of selection)
+    * spawn separate worker for signal calculations? pass back array for drawing and audio
 
 STRUCTURE
     * SIGNAL is a model

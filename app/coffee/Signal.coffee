@@ -8,7 +8,7 @@ class Signal
         @window = from : 0, to : 0 # units in seconds
         @updateViews()
     
-    updateViews: -> @graphView.update @; @audioView.update @
+    updateViews: -> @graphView.update @ #; @audioView.update @
     
     sample: (samplerate) ->
         if @window.from < @window.to
