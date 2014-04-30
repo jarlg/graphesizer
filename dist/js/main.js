@@ -50,11 +50,6 @@ App = (function() {
         return _this.zoom(event);
       };
     })(this));
-    this.graph.canvas.addEventListener('keydown', (function(_this) {
-      return function(event) {
-        return _this.handleShortcuts(event);
-      };
-    })(this));
   }
 
   App.prototype.setLineWidth = function(lineWidth) {
@@ -133,25 +128,19 @@ App = (function() {
           this.signal.update({
             fn: this.input.value
           });
-          if (!this.audio.options.realtimeAudio) {
-            return this.audio.play();
-          }
+          return this.audio.update(this.signal);
         } catch (_error) {
           e = _error;
           if (this.debug) {
             console.log(e);
           }
           this.signal.update(oldSignalState);
-          if (!this.audio.options.realtimeAudio) {
-            return this.audio.play();
-          }
+          return this.audio.update(this.signal);
         }
       } else {
         try {
           this.signal = new Signal(this.input.value, this.audio, this.graph);
-          if (!this.audio.options.realtimeAudio) {
-            return this.audio.play();
-          }
+          return this.audio.update(this.signal);
         } catch (_error) {
           e = _error;
           if (this.debug) {
@@ -200,9 +189,7 @@ App = (function() {
           from: this.signal.window.from
         }
       });
-      if (!this.audio.options.realtimeAudio) {
-        return this.audio.play();
-      }
+      return this.audio.update(this.signal);
     }
   };
 
@@ -219,12 +206,6 @@ App = (function() {
         this.graph.zoom = 0;
       }
       return this.graph.draw(this.signal);
-    }
-  };
-
-  App.prototype.handleShortcuts = function(event) {
-    if (String.fromCharCode(event.keyCode) === 'R') {
-      return this.audio.options.realtimeUpdate = !this.audio.options.realtimeUpdate;
     }
   };
 
@@ -250,16 +231,10 @@ Audio = (function() {
     this.gain.connect(this.ctx.destination);
   }
 
-  Audio.prototype.options = {
-    realtimeUpdate: false
-  };
-
   Audio.prototype.update = function(signal) {
     this.stop();
     this.createBufferSource(signal.sample(this.app.samplerate));
-    if (this.options.realtimeUpdate) {
-      return this.play();
-    }
+    return this.play();
   };
 
   Audio.prototype.createBufferSource = function(samples) {
@@ -627,8 +602,7 @@ Signal = (function() {
   }
 
   Signal.prototype.updateViews = function() {
-    this.graphView.update(this);
-    return this.audioView.update(this);
+    return this.graphView.update(this);
   };
 
   Signal.prototype.sample = function(samplerate) {
