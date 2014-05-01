@@ -48,12 +48,32 @@ class SidebarView
         play = document.createElement 'i'
         play.className = 'icon icon-play'
         toggles.appendChild play
-
-        toggles.addEventListener 'mouseup', (event) =>
+        play.addEventListener 'mouseup', (event) =>
             if not signal.audio.playing
                 signal.play()
+                play.className = 'icon icon-stop'
             else
                 signal.audio.stop()
+                play.className = 'icon icon-play'
+
+        looop = document.createTextNode 'l'
+        toggles.appendChild looop
+        looop.addEventListener 'mouseup', (event) => 
+            signal.audio.loop = not signal.audio.loop
+            signal.play() if signal.audio.playing
+
+        n = @app.sidebar.signals.length
+        key = document.createTextNode n
+        toggles.appendChild key
+        window.addEventListener 'keypress', (event) =>
+            if event.keyCode == 48 + n and not signal.audio.playing
+                signal.play()
+                play.className = 'icon icon-stop'
+
+        window.addEventListener 'keyup', (event) =>
+            if event.keyCode == 48 + n and signal.audio.playing
+                signal.audio.stop()
+                play.className = 'icon icon-play'
 
         entry.appendChild title
         entry.appendChild toggles

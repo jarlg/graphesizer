@@ -8,6 +8,7 @@ class Audio
         @gain = @ctx.createGain()
         @gain.gain.value = 0.5
         @gain.connect @ctx.destination
+        @loop = true
 
     update: (signal) ->
         @stop()
@@ -22,7 +23,7 @@ class Audio
                 do (data, i, samples) -> 
                     data[i] = samples[i]
             @source = @ctx.createBufferSource()
-            @source.loop = true
+            @source.loop = @loop
             @source.buffer = buffer
         else
             @source = null

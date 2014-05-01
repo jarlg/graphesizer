@@ -1,4 +1,4 @@
-"use strict"
+'use strict'
 
 math = require('mathjs')()
 
@@ -24,7 +24,7 @@ class App
         @graph.canvas.addEventListener 'mouseup', (event) => @endDrag event
         @graph.canvas.addEventListener 'mousemove', (event) => @update event
         @graph.canvas.addEventListener 'mousewheel', (event) => @zoom event
-        @graph.canvas.addEventListener 'keydown', (event) => @handleKeys event
+        window.addEventListener 'keydown', (event) => @handleKeys event
 
 
     setLineWidth: (lineWidth) -> @graph.ctx.lineWidth = lineWidth; @
@@ -122,7 +122,8 @@ class App
             @graph.draw @signal
 
     handleKeys: (event) ->
-        if event.keyCode == 13 # enter
+        if event.keyCode == 13 and @signal? and @signal.window.to != @signal.window.from
+            event.preventDefault()
             @sidebar.add @signal, @nextColor()
             @signal.audio.stop()
             @signal = new Signal @input.value, null, @graph, @samplerate
