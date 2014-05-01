@@ -1,5 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-"use strict";
+'use strict';
 var App, Audio, Graph, Sidebar, SidebarView, Signal, math;
 
 math = require('mathjs')();
@@ -22,7 +22,6 @@ App = (function() {
     this.signal = null;
     this.signalColors = [];
     this.graph = new Graph(canvas, this);
-    this.audio = new Audio(new webkitAudioContext(), this);
     this.sidebarView = new SidebarView(sidebar, this);
     this.sidebar = new Sidebar(this.sidebarView);
     this.input.addEventListener('keyup', (function(_this) {
@@ -50,9 +49,9 @@ App = (function() {
         return _this.zoom(event);
       };
     })(this));
-    this.graph.canvas.addEventListener('keydown', (function(_this) {
+    window.addEventListener('keydown', (function(_this) {
       return function(event) {
-        return _this.handleShortcuts(event);
+        return _this.handleKeys(event);
       };
     })(this));
   }
@@ -130,28 +129,21 @@ App = (function() {
       if (this.signal != null) {
         oldSignalState = this.signal.state();
         try {
-          this.signal.update({
+          return this.signal.update({
             fn: this.input.value
           });
-          if (!this.audio.options.realtimeAudio) {
-            return this.audio.play();
-          }
         } catch (_error) {
           e = _error;
           if (this.debug) {
             console.log(e);
           }
-          this.signal.update(oldSignalState);
-          if (!this.audio.options.realtimeAudio) {
-            return this.audio.play();
-          }
+          return this.signal.update(oldSignalState);
         }
       } else {
         try {
-          this.signal = new Signal(this.input.value, this.audio, this.graph);
-          if (!this.audio.options.realtimeAudio) {
-            return this.audio.play();
-          }
+          this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
+          this.signal.audio = new Audio(new webkitAudioContext(), this);
+          return this.signal.play();
         } catch (_error) {
           e = _error;
           if (this.debug) {
@@ -200,9 +192,7 @@ App = (function() {
           from: this.signal.window.from
         }
       });
-      if (!this.audio.options.realtimeAudio) {
-        return this.audio.play();
-      }
+      return this.signal.play();
     }
   };
 
@@ -222,9 +212,15 @@ App = (function() {
     }
   };
 
-  App.prototype.handleShortcuts = function(event) {
-    if (String.fromCharCode(event.keyCode) === 'R') {
-      return this.audio.options.realtimeUpdate = !this.audio.options.realtimeUpdate;
+  App.prototype.handleKeys = function(event) {
+    if (event.keyCode === 13 && (this.signal != null) && this.signal.window.to !== this.signal.window.from) {
+      console.log(this.signal.window.to, this.signal.window.from);
+      event.preventDefault();
+      this.sidebar.add(this.signal, this.nextColor());
+      this.signal.audio.stop();
+      this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
+      this.signal.audio = new Audio(new webkitAudioContext(), this);
+      return this.signal.play();
     }
   };
 
@@ -248,18 +244,13 @@ Audio = (function() {
     this.gain = this.ctx.createGain();
     this.gain.gain.value = 0.5;
     this.gain.connect(this.ctx.destination);
+    this.loop = true;
   }
-
-  Audio.prototype.options = {
-    realtimeUpdate: false
-  };
 
   Audio.prototype.update = function(signal) {
     this.stop();
-    this.createBufferSource(signal.sample(this.app.samplerate));
-    if (this.options.realtimeUpdate) {
-      return this.play();
-    }
+    this.createBufferSource(signal.getData());
+    return this.play();
   };
 
   Audio.prototype.createBufferSource = function(samples) {
@@ -274,7 +265,7 @@ Audio = (function() {
         _fn(data, i, samples);
       }
       this.source = this.ctx.createBufferSource();
-      this.source.loop = true;
+      this.source.loop = this.loop;
       return this.source.buffer = buffer;
     } else {
       return this.source = null;
@@ -521,9 +512,9 @@ Sidebar = (function() {
     this.view.update(this);
   }
 
-  Sidebar.prototype.add = function(signal) {
+  Sidebar.prototype.add = function(signal, color) {
     this.signals.push(signal);
-    return this.view.add(signal);
+    return this.view.add(signal, color);
   };
 
   return Sidebar;
@@ -563,8 +554,8 @@ SidebarView = (function() {
     }
   };
 
-  SidebarView.prototype.add = function(signal) {
-    return this.signalList.insertBefore(this.makeEntry(signal), this.signalList.firstChild);
+  SidebarView.prototype.add = function(signal, color) {
+    return this.signalList.insertBefore(this.makeEntry(signal, color), this.signalList.firstChild);
   };
 
   SidebarView.prototype.show = function() {
@@ -586,16 +577,58 @@ SidebarView = (function() {
     }
   };
 
-  SidebarView.prototype.makeEntry = function(signal) {
-    var entry, title, toggles, txt;
+  SidebarView.prototype.makeEntry = function(signal, color) {
+    var entry, key, looop, n, play, title, toggles;
     entry = document.createElement('li');
     title = document.createTextNode(signal.fn);
     toggles = document.createElement('div');
-    toggles.style.background = signal.color;
-    txt = document.createTextNode('');
-    toggles.appendChild(txt);
+    toggles.style.background = color;
+    toggles.className = 'sidebar-signal-toggle';
+    play = document.createElement('i');
+    play.className = 'icon icon-play';
+    toggles.appendChild(play);
+    play.addEventListener('mouseup', (function(_this) {
+      return function(event) {
+        if (!signal.audio.playing) {
+          signal.play();
+          return play.className = 'icon icon-stop';
+        } else {
+          signal.audio.stop();
+          return play.className = 'icon icon-play';
+        }
+      };
+    })(this));
+    looop = document.createTextNode('l');
+    toggles.appendChild(looop);
+    looop.addEventListener('mouseup', (function(_this) {
+      return function(event) {
+        signal.audio.loop = !signal.audio.loop;
+        if (signal.audio.playing) {
+          return signal.play();
+        }
+      };
+    })(this));
+    n = this.app.sidebar.signals.length;
+    key = document.createTextNode(n);
+    toggles.appendChild(key);
+    window.addEventListener('keypress', (function(_this) {
+      return function(event) {
+        if (event.keyCode === 48 + n && !signal.audio.playing) {
+          signal.play();
+          return play.className = 'icon icon-stop';
+        }
+      };
+    })(this));
+    window.addEventListener('keyup', (function(_this) {
+      return function(event) {
+        if (event.keyCode === 48 + n && signal.audio.playing) {
+          signal.audio.stop();
+          return play.className = 'icon icon-play';
+        }
+      };
+    })(this));
     entry.appendChild(title);
-    entry.appendChild(toggles).className = 'sidebar-signal-toggle';
+    entry.appendChild(toggles);
     entry.className = 'sidebar-signal';
     return entry;
   };
@@ -615,23 +648,42 @@ var Signal, math,
 math = require('mathjs')();
 
 Signal = (function() {
-  function Signal(fn, audioView, graphView) {
+  function Signal(fn, audio, graph, samplerate) {
     this.fn = fn;
-    this.audioView = audioView;
-    this.graphView = graphView;
+    this.audio = audio;
+    this.graph = graph;
+    this.samplerate = samplerate;
     this.window = {
       from: 0,
       to: 0
     };
-    this.updateViews();
+    this.dirty = false;
+    this.data = [];
+    this.draw(this);
+    this.play(this);
   }
 
-  Signal.prototype.updateViews = function() {
-    this.graphView.update(this);
-    return this.audioView.update(this);
+  Signal.prototype.draw = function() {
+    if (this.graph != null) {
+      return this.graph.update(this);
+    }
   };
 
-  Signal.prototype.sample = function(samplerate) {
+  Signal.prototype.play = function() {
+    if (this.audio != null) {
+      return this.audio.update(this);
+    }
+  };
+
+  Signal.prototype.getData = function() {
+    if (this.dirty) {
+      this.data = this._sample();
+      this.dirty = false;
+    }
+    return this.data;
+  };
+
+  Signal.prototype._sample = function() {
     var delta, end, expr, i, nSamples, samples, scope, start, _fn, _i, _ref;
     if (this.window.from < this.window.to) {
       start = this.window.from;
@@ -640,9 +692,9 @@ Signal = (function() {
       start = this.window.to;
       end = this.window.from;
     }
-    nSamples = Math.floor((end - start) * samplerate);
+    nSamples = Math.floor((end - start) * this.samplerate);
     samples = new Float32Array(nSamples);
-    delta = 1 / samplerate;
+    delta = 1 / this.samplerate;
     expr = math.parse(this.fn).compile(math);
     scope = {
       x: start
@@ -660,13 +712,15 @@ Signal = (function() {
   };
 
   Signal.prototype.update = function(obj) {
-    var key, updateView, val, _fn;
-    updateView = false;
+    var key, val, _fn;
+    if (!this.dirty) {
+      this.dirty = false;
+    }
     _fn = (function(_this) {
       return function() {
         if ((val != null) && _this[key] !== val) {
           _this[key] = val;
-          return updateView = true;
+          return _this.dirty = true;
         }
       };
     })(this);
@@ -675,8 +729,8 @@ Signal = (function() {
       val = obj[key];
       _fn();
     }
-    if (updateView) {
-      return this.updateViews();
+    if (this.dirty) {
+      return this.draw(this);
     }
   };
 
