@@ -123,7 +123,7 @@ class App
 
     handleKeys: (event) ->
         if event.keyCode == 13 # enter
-            @sidebar.add @signal
+            @sidebar.add @signal, @nextColor()
             @signal.audio.stop()
             @signal = new Signal @input.value, null, @graph, @samplerate
             @signal.audio = new Audio new webkitAudioContext(), @

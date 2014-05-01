@@ -11,7 +11,9 @@ var livereload = require('gulp-livereload');
 
 var paths = {
     coffee  : './app/coffee/*.coffee',
-    statiq  : './app/*.{html,css}'
+    html :  './app/index.html',
+    css  : './app/css/*',
+    font : './app/font/*'
 };
 
 gulp.task('browserify', function () {
@@ -26,9 +28,19 @@ gulp.task('browserify', function () {
 });
 
 
-gulp.task('static', function () {
-    return gulp.src(paths.statiq)
+gulp.task('html', function () {
+    return gulp.src(paths.html)
                 .pipe(gulp.dest('dist'));
+});
+
+gulp.task('css', function () {
+    return gulp.src(paths.css)
+                .pipe(gulp.dest('dist/css'));
+});
+
+gulp.task('font', function () {
+    return gulp.src(paths.font)
+                .pipe(gulp.dest('dist/font'));
 });
 
 gulp.task('serve', function(next) {
@@ -47,7 +59,8 @@ gulp.task('serve', function(next) {
 
 gulp.task('watch', ['serve'], function () {
     gulp.watch(paths.coffee, ['browserify']);
-    gulp.watch(paths.statiq, ['static']);
+    gulp.watch(paths.html, ['html']);
+    gulp.watch(paths.css, ['css']);
     
     var server = livereload();
     gulp.watch('./dist/**').on('change', function (file) {
@@ -56,4 +69,4 @@ gulp.task('watch', ['serve'], function () {
 });
 
 
-gulp.task('default', ['browserify', 'static']);
+gulp.task('default', ['browserify', 'html', 'css', 'font']);

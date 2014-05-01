@@ -214,7 +214,7 @@ App = (function() {
 
   App.prototype.handleKeys = function(event) {
     if (event.keyCode === 13) {
-      this.sidebar.add(this.signal);
+      this.sidebar.add(this.signal, this.nextColor());
       this.signal.audio.stop();
       this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
       this.signal.audio = new Audio(new webkitAudioContext(), this);
@@ -509,9 +509,9 @@ Sidebar = (function() {
     this.view.update(this);
   }
 
-  Sidebar.prototype.add = function(signal) {
+  Sidebar.prototype.add = function(signal, color) {
     this.signals.push(signal);
-    return this.view.add(signal);
+    return this.view.add(signal, color);
   };
 
   return Sidebar;
@@ -551,8 +551,8 @@ SidebarView = (function() {
     }
   };
 
-  SidebarView.prototype.add = function(signal) {
-    return this.signalList.insertBefore(this.makeEntry(signal), this.signalList.firstChild);
+  SidebarView.prototype.add = function(signal, color) {
+    return this.signalList.insertBefore(this.makeEntry(signal, color), this.signalList.firstChild);
   };
 
   SidebarView.prototype.show = function() {
@@ -574,18 +574,17 @@ SidebarView = (function() {
     }
   };
 
-  SidebarView.prototype.makeEntry = function(signal) {
-    var entry, title, toggles, txt;
+  SidebarView.prototype.makeEntry = function(signal, color) {
+    var entry, play, title, toggles;
     entry = document.createElement('li');
     title = document.createTextNode(signal.fn);
     toggles = document.createElement('div');
-    toggles.style.background = signal.color;
-    txt = document.createTextNode('0');
-    toggles.appendChild(txt);
-    entry.appendChild(title);
-    entry.appendChild(toggles).className = 'sidebar-signal-toggle';
-    entry.className = 'sidebar-signal';
-    entry.addEventListener('mouseup', (function(_this) {
+    toggles.style.background = color;
+    toggles.className = 'sidebar-signal-toggle';
+    play = document.createElement('i');
+    play.className = 'icon icon-play';
+    toggles.appendChild(play);
+    toggles.addEventListener('mouseup', (function(_this) {
       return function(event) {
         if (!signal.audio.playing) {
           return signal.play();
@@ -594,6 +593,9 @@ SidebarView = (function() {
         }
       };
     })(this));
+    entry.appendChild(title);
+    entry.appendChild(toggles);
+    entry.className = 'sidebar-signal';
     return entry;
   };
 

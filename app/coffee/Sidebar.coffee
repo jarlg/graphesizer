@@ -5,9 +5,9 @@ class Sidebar
         @signals = []
         @view.update @
 
-    add: (signal) ->
+    add: (signal, color) ->
         @signals.push signal
-        @view.add signal
+        @view.add signal, color
 
 
 module.exports = Sidebar

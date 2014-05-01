@@ -19,8 +19,8 @@ class SidebarView
         else
             @show()
 
-    add: (signal) ->
-        @signalList.insertBefore @makeEntry(signal), @signalList.firstChild
+    add: (signal, color) ->
+        @signalList.insertBefore @makeEntry(signal, color), @signalList.firstChild
 
     show: ->
         @button.innerHTML = '<<'
@@ -37,25 +37,27 @@ class SidebarView
         else
             @show()
 
-    makeEntry: (signal) ->
+    makeEntry: (signal, color) ->
         entry = document.createElement 'li'
         title = document.createTextNode signal.fn
 
         toggles = document.createElement 'div'
-        toggles.style.background = signal.color
-        txt = document.createTextNode '0'
-        toggles.appendChild txt
+        toggles.style.background = color
+        toggles.className = 'sidebar-signal-toggle'
 
-        entry.appendChild title
-        entry.appendChild(toggles)
-            .className = 'sidebar-signal-toggle'
-        entry.className = 'sidebar-signal'
-        
-        entry.addEventListener 'mouseup', (event) =>
+        play = document.createElement 'i'
+        play.className = 'icon icon-play'
+        toggles.appendChild play
+
+        toggles.addEventListener 'mouseup', (event) =>
             if not signal.audio.playing
                 signal.play()
             else
                 signal.audio.stop()
+
+        entry.appendChild title
+        entry.appendChild toggles
+        entry.className = 'sidebar-signal'
         entry
 
 
