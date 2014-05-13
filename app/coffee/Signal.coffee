@@ -6,14 +6,20 @@ math = require('mathjs')()
 class Signal
     constructor: (@fn, @audio, @graph, @samplerate) ->
         @window = from : 0, to : 0 # units in seconds
+
+        # a signal is dirty if it has changed since updating its audio view
+        # when the audio view requests sample data from this model, we only
+        # resample if the model is dirty
         @dirty = false
-        @data = []
-        @draw @
-        @play @
+
+        @data = @_sample()
+        @draw()
+        @play()
 
     draw: -> @graph.update @ if @graph?
     play: -> @audio.update @ if @audio?
 
+    # used by audio view to make sound
     getData: ->
         if @dirty
             @data = @_sample()

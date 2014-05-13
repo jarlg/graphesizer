@@ -22,6 +22,7 @@ App = (function() {
     this.signal = null;
     this.signalColors = [];
     this.graph = new Graph(canvas, this);
+    this.audioContext = new webkitAudioContext();
     this.sidebarView = new SidebarView(sidebar, this);
     this.sidebar = new Sidebar(this.sidebarView);
     this.input.addEventListener('keyup', (function(_this) {
@@ -142,7 +143,7 @@ App = (function() {
       } else {
         try {
           this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
-          this.signal.audio = new Audio(new webkitAudioContext(), this);
+          this.signal.audio = new Audio(this.audioContext, this);
           return this.signal.play();
         } catch (_error) {
           e = _error;
@@ -214,13 +215,10 @@ App = (function() {
 
   App.prototype.handleKeys = function(event) {
     if (event.keyCode === 13 && (this.signal != null) && this.signal.window.to !== this.signal.window.from) {
-      console.log(this.signal.window.to, this.signal.window.from);
       event.preventDefault();
       this.sidebar.add(this.signal, this.nextColor());
       this.signal.audio.stop();
-      this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
-      this.signal.audio = new Audio(new webkitAudioContext(), this);
-      return this.signal.play();
+      return this.signal = new Signal(this.input.value, new Audio(this.audioContext, this), this.graph, this.samplerate);
     }
   };
 
@@ -658,9 +656,9 @@ Signal = (function() {
       to: 0
     };
     this.dirty = false;
-    this.data = [];
-    this.draw(this);
-    this.play(this);
+    this.data = this._sample();
+    this.draw();
+    this.play();
   }
 
   Signal.prototype.draw = function() {

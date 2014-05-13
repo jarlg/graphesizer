@@ -15,6 +15,7 @@ class App
         @signalColors = []
 
         @graph = new Graph canvas, @
+        @audioContext = new webkitAudioContext()
         
         @sidebarView = new SidebarView sidebar, @
         @sidebar = new Sidebar @sidebarView
@@ -65,13 +66,13 @@ class App
                 oldSignalState = @signal.state()
                 try
                     @signal.update fn: @input.value
+                    @signal.play()
                 catch e
                     console.log e if @debug
                     @signal.update oldSignalState
             else
                 try 
-                    @signal = new Signal @input.value, null, @graph, @samplerate
-                    @signal.audio = new Audio new webkitAudioContext(), @
+                    @signal = new Signal @input.value, new Audio(@audioContext, @), @graph, @samplerate
                     @signal.play()
                 catch e
                     console.log e if @debug
@@ -117,18 +118,16 @@ class App
                 @graph.zoom += event.deltaY / 10  
             else if @graph.zoom >= 0
                 @graph.zoom += event.deltaY / 100
-
             @graph.zoom = 0 if @graph.zoom < 0
             @graph.draw @signal
 
     handleKeys: (event) ->
+        # enter key
         if event.keyCode == 13 and @signal? and @signal.window.to != @signal.window.from
             event.preventDefault()
             @sidebar.add @signal, @nextColor()
             @signal.audio.stop()
-            @signal = new Signal @input.value, null, @graph, @samplerate
-            @signal.audio = new Audio new webkitAudioContext(), @
-            @signal.play()
+            @signal = new Signal @input.value, new Audio(@audioContext, @), @graph, @samplerate
 
 
 module.exports = App
