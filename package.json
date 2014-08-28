@@ -1,14 +1,16 @@
 {
-  "name": "fnsmplr",
-  "version": "0.0.0",
+  "name": "graphesizer",
+  "version": "0.0.1",
   "description": "",
   "main": "build/js/main.min.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "gulp --require coffee-script/register",
+    "build": "gulp --require coffee-script/register",
+    "watch": "gulp watch --require coffee-script/register"
   },
   "repository": {
     "type": "git",
-    "url": "github.com/giraj/graphesizer.git"
+    "url": "git@github.com/giraj/graphesizer.git"
   },
   "keywords": [
     "math",
@@ -27,18 +29,24 @@
   },
   "homepage": "https://giraj.github.io/graphesizer",
   "devDependencies": {
+    "browserify": "^3.32.1",
+    "coffeeify": "^0.7.0",
     "gulp": "^3.5.5",
     "gulp-concat": "^2.1.7",
-    "gulp-uglify": "^0.2.1",
     "gulp-livereload": "^1.2.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-streamify": "0.0.4",
+    "gulp-uglify": "^0.2.1",
     "node-static": "^0.7.3",
     "vinyl-source-stream": "^0.1.1",
-    "gulp-streamify": "0.0.4",
-    "browserify": "^3.32.1",
-    "coffeeify": "^0.6.0",
-    "gulp-rename": "^1.2.0"
+    "coffee-script": "^1.8.0"
   },
   "dependencies": {
     "mathjs": "^0.18.1"
+  },
+  "browserify": {
+    "transform": [
+      "coffeeify"
+    ]
   }
 }

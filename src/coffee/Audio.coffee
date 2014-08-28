@@ -31,11 +31,11 @@ class Audio
     play: ->
         if @source? and not @playing
             @source.connect @gain
-            @source.noteOn 0 
+            @source.start 0 
             @playing = true
 
     stop: ->
-        @source.noteOff(0) if @source? and @playing
+        @source.stop(0) if @source? and @playing
         @playing = false
 
 
