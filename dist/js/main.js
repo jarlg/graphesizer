@@ -580,23 +580,23 @@ SidebarView = (function() {
   };
 
   SidebarView.prototype.makeEntry = function(signal, color) {
-    var entry, key, looop, n, play, title, toggles;
+    var entry, key, looop, n, playButton, title, toggles;
     entry = document.createElement('li');
     title = document.createTextNode(signal.fn);
     toggles = document.createElement('div');
     toggles.style.background = color;
     toggles.className = 'sidebar-signal-toggle';
-    play = document.createElement('i');
-    play.className = 'icon icon-play';
+    playButton = document.createElement('i');
+    playButton.className = 'icon icon-play';
     toggles.appendChild(play);
-    play.addEventListener('mouseup', (function(_this) {
+    playButton.addEventListener('mouseup', (function(_this) {
       return function(event) {
         if (!signal.audio.playing) {
           signal.play();
-          return play.className = 'icon icon-stop';
+          return playButton.className = 'icon icon-stop';
         } else {
           signal.audio.stop();
-          return play.className = 'icon icon-play';
+          return playButton.className = 'icon icon-play';
         }
       };
     })(this));
