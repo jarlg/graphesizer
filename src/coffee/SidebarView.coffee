@@ -45,16 +45,16 @@ class SidebarView
         toggles.style.background = color
         toggles.className = 'sidebar-signal-toggle'
 
-        play = document.createElement 'i'
-        play.className = 'icon icon-play'
+        playButton = document.createElement 'i'
+        playButton.className = 'icon icon-play'
         toggles.appendChild play
-        play.addEventListener 'mouseup', (event) =>
+        playButton.addEventListener 'mouseup', (event) =>
             if not signal.audio.playing
                 signal.play()
-                play.className = 'icon icon-stop'
+                playButton.className = 'icon icon-stop'
             else
                 signal.audio.stop()
-                play.className = 'icon icon-play'
+                playButton.className = 'icon icon-play'
 
         looop = document.createTextNode 'l'
         toggles.appendChild looop
