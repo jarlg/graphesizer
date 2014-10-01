@@ -22,6 +22,7 @@ App = (function() {
     this.signal = null;
     this.signalColors = [];
     this.graph = new Graph(canvas, this);
+    this.audioContext = new webkitAudioContext();
     this.sidebarView = new SidebarView(sidebar, this);
     this.sidebar = new Sidebar(this.sidebarView);
     this.input.addEventListener('keyup', (function(_this) {
@@ -129,9 +130,10 @@ App = (function() {
       if (this.signal != null) {
         oldSignalState = this.signal.state();
         try {
-          return this.signal.update({
+          this.signal.update({
             fn: this.input.value
           });
+          return this.signal.play();
         } catch (_error) {
           e = _error;
           if (this.debug) {
@@ -141,8 +143,7 @@ App = (function() {
         }
       } else {
         try {
-          this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
-          this.signal.audio = new Audio(new webkitAudioContext(), this);
+          this.signal = new Signal(this.input.value, new Audio(this.audioContext, this), this.graph, this.samplerate);
           return this.signal.play();
         } catch (_error) {
           e = _error;
@@ -214,13 +215,10 @@ App = (function() {
 
   App.prototype.handleKeys = function(event) {
     if (event.keyCode === 13 && (this.signal != null) && this.signal.window.to !== this.signal.window.from) {
-      console.log(this.signal.window.to, this.signal.window.from);
       event.preventDefault();
       this.sidebar.add(this.signal, this.nextColor());
       this.signal.audio.stop();
-      this.signal = new Signal(this.input.value, null, this.graph, this.samplerate);
-      this.signal.audio = new Audio(new webkitAudioContext(), this);
-      return this.signal.play();
+      return this.signal = new Signal(this.input.value, new Audio(this.audioContext, this), this.graph, this.samplerate);
     }
   };
 
@@ -229,6 +227,7 @@ App = (function() {
 })();
 
 module.exports = App;
+
 
 
 },{"./Audio.coffee":2,"./Graph.coffee":3,"./Sidebar.coffee":4,"./SidebarView.coffee":5,"./Signal.coffee":6}],2:[function(require,module,exports){
@@ -275,14 +274,14 @@ Audio = (function() {
   Audio.prototype.play = function() {
     if ((this.source != null) && !this.playing) {
       this.source.connect(this.gain);
-      this.source.noteOn(0);
+      this.source.start(0);
       return this.playing = true;
     }
   };
 
   Audio.prototype.stop = function() {
     if ((this.source != null) && this.playing) {
-      this.source.noteOff(0);
+      this.source.stop(0);
     }
     return this.playing = false;
   };
@@ -292,6 +291,7 @@ Audio = (function() {
 })();
 
 module.exports = Audio;
+
 
 
 },{}],3:[function(require,module,exports){
@@ -500,6 +500,7 @@ Graph = (function() {
 module.exports = Graph;
 
 
+
 },{}],4:[function(require,module,exports){
 "use strict";
 var Sidebar;
@@ -522,6 +523,7 @@ Sidebar = (function() {
 })();
 
 module.exports = Sidebar;
+
 
 
 },{}],5:[function(require,module,exports){
@@ -578,23 +580,23 @@ SidebarView = (function() {
   };
 
   SidebarView.prototype.makeEntry = function(signal, color) {
-    var entry, key, looop, n, play, title, toggles;
+    var entry, key, looop, n, playButton, title, toggles;
     entry = document.createElement('li');
     title = document.createTextNode(signal.fn);
     toggles = document.createElement('div');
     toggles.style.background = color;
     toggles.className = 'sidebar-signal-toggle';
-    play = document.createElement('i');
-    play.className = 'icon icon-play';
+    playButton = document.createElement('i');
+    playButton.className = 'icon icon-play';
     toggles.appendChild(play);
-    play.addEventListener('mouseup', (function(_this) {
+    playButton.addEventListener('mouseup', (function(_this) {
       return function(event) {
         if (!signal.audio.playing) {
           signal.play();
-          return play.className = 'icon icon-stop';
+          return playButton.className = 'icon icon-stop';
         } else {
           signal.audio.stop();
-          return play.className = 'icon icon-play';
+          return playButton.className = 'icon icon-play';
         }
       };
     })(this));
@@ -640,6 +642,7 @@ SidebarView = (function() {
 module.exports = SidebarView;
 
 
+
 },{}],6:[function(require,module,exports){
 "use strict";
 var Signal, math,
@@ -658,9 +661,9 @@ Signal = (function() {
       to: 0
     };
     this.dirty = false;
-    this.data = [];
-    this.draw(this);
-    this.play(this);
+    this.data = this._sample();
+    this.draw();
+    this.play();
   }
 
   Signal.prototype.draw = function() {
@@ -751,6 +754,7 @@ Signal = (function() {
 module.exports = Signal;
 
 
+
 },{}],7:[function(require,module,exports){
 'use strict';
 var $, App, app, samplerate;
@@ -764,6 +768,7 @@ samplerate = 48000;
 app = new App($('#graph'), $('#sidebar'), $('#fn-input'), samplerate);
 
 app.setSignalColors(["#b58900", "#dc322f", "#d33682", "#6c71c4", "#268bd2", "#2aa198", "#cb4b16", "#859900"]).setLineWidth(3);
+
 
 
 },{"./AppController.coffee":1}]},{},[7])
